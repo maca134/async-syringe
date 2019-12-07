@@ -1,2 +1,28 @@
-src/*
+# Generated Files
+coverage/
+
+# Source code
+src/
+
+# Logs
+*.log
+
+# Tests
+*.test.ts
+
+# Configs
+.github/
+.vscode/
+.travis.yml
 tsconfig.json
+typescript/
+.eslintrc.yml
+.prettierrc.yml
+.huskyrc.json
+.nvmrc
+
+# Lock files
+package-lock.json
+
+# MacOS specific files
+.DS_Store

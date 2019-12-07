@@ -1,27 +1,36 @@
 {
 	"compileOnSave": true,
 	"compilerOptions": {
-		"strict": true,
-		"target": "es2015",
+		"target": "ES6",
+		"module": "commonjs",
 		"lib": [
 			"es6"
 		],
 		"types": [
 			"reflect-metadata"
 		],
-		"module": "commonjs",
-		"moduleResolution": "node",
+		"strict": true,
+		"noImplicitAny": true,
+		"strictNullChecks": true,
+		"alwaysStrict": true,
+		"noImplicitThis": true,
+		"noUnusedLocals": true,
+		"noUnusedParameters": true,
+		"noImplicitReturns": true,
+		"declaration": true,
+		"allowSyntheticDefaultImports": true,
 		"experimentalDecorators": true,
 		"emitDecoratorMetadata": true,
-		"declaration": true,
-		"inlineSourceMap": false,
-		"outDir": "dist"
+		"outDir": "dist",
+		"stripInternal": true,
+		"moduleResolution": "node",
+		"importHelpers": true
 	},
 	"include": [
 		"./src/**/*"
 	],
 	"exclude": [
-		"node_modules",
-		"**/*.spec.ts"
+		"./node_modules",
+		"./src/**/*.test.ts"
 	]
 }
