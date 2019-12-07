@@ -20,6 +20,9 @@ typescript/
 .prettierrc.yml
 .huskyrc.json
 .nvmrc
+.jest.config.js
+tsconfig.test.json
+.gitattributes
 
 # Lock files
 package-lock.json
