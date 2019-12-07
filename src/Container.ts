@@ -35,7 +35,7 @@ export class Container {
 		} else {
 			throw new Error(`no ctor provided for ${String(token)}`);
 		}
-		
+
 		const paramTypes: constructor<any>[] = Reflect.getMetadata('design:paramtypes', ctor) || [];
 		let opts: RegistrationOptions<T>;
 		if (options) {
