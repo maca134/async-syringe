@@ -1,0 +1,34 @@
+{
+	"name": "async-syringe",
+	"version": "1.0.0",
+	"description": "Lightweight dependency injection container for JavaScript/TypeScript with async support",
+	"main": "dist/index.js",
+	"scripts": {
+		"build": "rimraf ./dist && npm run generate-barrels && tsc",
+		"generate-barrels": "barrelsby --delete -d ./src"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/maca134/async-syringe.git"
+	},
+	"keywords": [
+		"ioc",
+		"dependency",
+		"injection",
+		"di"
+	],
+	"author": "maca134@googlemail.com",
+	"license": "MIT",
+	"bugs": {
+		"url": "https://github.com/maca134/async-syringe/issues"
+	},
+	"homepage": "https://github.com/maca134/async-syringe#readme",
+	"devDependencies": {
+		"barrelsby": "^2.2.0",
+		"rimraf": "^3.0.0",
+		"typescript": "^3.7.3"
+	},
+	"dependencies": {
+		"reflect-metadata": "^0.1.13"
+	}
+}
