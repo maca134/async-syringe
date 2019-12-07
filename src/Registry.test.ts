@@ -1,4 +1,4 @@
-import { Registry } from './registry';
+import { Registry } from './Registry';
 import { Registration, Lifecycle } from './Kernel';
 
 let registry: Registry;
