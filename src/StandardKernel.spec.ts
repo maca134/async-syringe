@@ -3,7 +3,7 @@ import { StandardKernel } from './StandardKernel';
 import { injectable } from './decorators/injectable';
 import { injectAll } from './decorators/injectAll';
 import { singleton } from './decorators/singleton';
-import { Lifecycle } from './Kernel';
+import { Lifecycle, KernelModule, Kernel } from './Kernel';
 
 let kernel: StandardKernel;
 beforeEach(() => {
@@ -216,5 +216,39 @@ test('dependencyTree', () => {
 	).not.toBeUndefined();
 });
 
-test('scoped instance', () => {});
-test('load module', () => {});
+test('scoped instance', async () => {
+	@injectable({ lifecycle: Lifecycle.Scoped })
+	class ScopedFoo {}
+
+	@injectable()
+	class Foo {
+		constructor(public scopedFoo: ScopedFoo) {}
+	}
+
+	@injectable()
+	class Bar {
+		constructor(public scopedFoo: ScopedFoo, public foo: Foo) {}
+	}
+
+	const bar1 = await kernel.resolve(Bar);
+	const bar2 = await kernel.resolve(Bar);
+
+	expect(bar1).toBeInstanceOf(Bar);
+	expect(bar2).toBeInstanceOf(Bar);
+
+	expect(bar1.scopedFoo === bar1.foo.scopedFoo).toBeTruthy();
+	expect(bar2.scopedFoo === bar2.foo.scopedFoo).toBeTruthy();
+	expect(bar1.scopedFoo !== bar2.scopedFoo).toBeTruthy();
+});
+
+test('load module', async () => {
+	class Foo {}
+	class FooModule implements KernelModule {
+		load(kernel: Kernel): void {
+			kernel.registerClass(Foo);
+		}
+	}
+	kernel.load(new FooModule());
+	const foo = await kernel.resolve(Foo);
+	expect(foo).toBeInstanceOf(Foo);
+});
