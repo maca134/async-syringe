@@ -80,7 +80,7 @@ export class StandardKernel implements Kernel {
 	}
 
 	private resolveRegistration<T>(token: InjectionToken<T>, registration: Registration<T>) {
-		const lifecycle: Lifecycle = registration.opts && registration.opts.lifecycle ? registration.opts.lifecycle : Lifecycle.Singleton;
+		const lifecycle: Lifecycle = registration.opts && registration.opts.lifecycle ? registration.opts.lifecycle : Lifecycle.Transient;
 
 		switch (lifecycle) {
 			case Lifecycle.Singleton:
