@@ -1,9 +1,11 @@
 import {
 	constructor, INJECTION_TOKEN_METADATA_KEY, InjectionToken, Kernel,
 	KernelModule, Lifecycle, ParamInjectionToken, REG_OPTS_METADATA_KEY,
-	RegistrationOptions, Registration
+	RegistrationOptions, Registration, ResolutionContext
 } from './Kernel';
 import { Registry } from './Registry';
+
+
 
 export class StandardKernel implements Kernel {
 	private _singletons = new Map<InjectionToken<any>, Promise<any>>();
@@ -40,7 +42,7 @@ export class StandardKernel implements Kernel {
 				throw new Error(`can not inject primitive type at param ${i} in ${ctor.name}(${params.map(p => typeof p.token === 'function' ? p.token.name : p.token).join(',')})`);
 			}
 		}
-		this._registry.set(token, { opts, params, resolve: () => this.resolveClass(token, ctor) });
+		this._registry.set(token, { opts, params, resolve: context => this.resolveClass(token, ctor, context) });
 	}
 
 	registerValue<T>(token: InjectionToken<T>, value: T) {
@@ -60,7 +62,7 @@ export class StandardKernel implements Kernel {
 		this._singletons.delete(token);
 	}
 
-	resolve<T>(token: InjectionToken<T>): Promise<T> | T {
+	resolve<T>(token: InjectionToken<T>, context: ResolutionContext = new ResolutionContext()): Promise<T> | T {
 		if (!this._registry.has(token) && typeof token === 'function') {
 			this.registerClass(token);
 		}
@@ -68,37 +70,42 @@ export class StandardKernel implements Kernel {
 		if (!registration) {
 			throw new Error(`${String(token)} token not found`);
 		}
-		return this.resolveRegistration(token, registration);
+		return this.resolveRegistration(token, registration, context);
 	}
 
-	resolveAll<T>(token: InjectionToken<T>): Promise<T[]> {
-		return Promise.all(this._registry.getAll<T>(token).map(registration => this.resolveRegistration(token, registration)));
+	resolveAll<T>(token: InjectionToken<T>, context: ResolutionContext = new ResolutionContext()): Promise<T[]> {
+		return Promise.all(this._registry.getAll<T>(token).map(registration => this.resolveRegistration(token, registration, context)));
 	}
 
 	load<T extends KernelModule>(module: T) {
 		module.load(this);
 	}
 
-	private resolveRegistration<T>(token: InjectionToken<T>, registration: Registration<T>) {
+	private resolveRegistration<T>(token: InjectionToken<T>, registration: Registration<T>, context: ResolutionContext) {
 		const lifecycle: Lifecycle = registration.opts && registration.opts.lifecycle ? registration.opts.lifecycle : Lifecycle.Transient;
 
-		switch (lifecycle) {
-			case Lifecycle.Singleton:
-				if (this._singletons.has(token)) {
-					return this._singletons.get(token) as Promise<T>;
-				}
-				const instance = Promise.resolve(registration.resolve());
-				this._singletons.set(token, instance);
-				return instance;
-
-			case Lifecycle.Transient:
-				return Promise.resolve(registration.resolve());
-					
+		if (lifecycle == Lifecycle.Singleton) {
+			if (this._singletons.has(token)) {
+				return this._singletons.get(token) as Promise<T>;
+			}
+			const instance = Promise.resolve(registration.resolve(context));
+			this._singletons.set(token, instance);
+			return instance;
+		} else if (lifecycle == Lifecycle.Transient) {
+			return Promise.resolve(registration.resolve(context));
+		} else if (lifecycle == Lifecycle.Scoped) {
+			if (context.scopedResolutions.has(token)) {
+				return context.scopedResolutions.get(token) as Promise<T>;
+			}
+			const instance = Promise.resolve(registration.resolve(context));
+			context.scopedResolutions.set(token, instance);
+			return instance;
+		} else {
+			throw new Error('unknown lifecycle');
 		}
-		throw new Error('unknown lifecycle');
 	}
 
-	private async resolveClass<T>(token: InjectionToken<T>, ctor: constructor<T>) {
+	private async resolveClass<T>(token: InjectionToken<T>, ctor: constructor<T>, context: ResolutionContext) {
 		const registration = this._registry.get<T>(token);
 		if (!registration) {
 			throw new Error('token not found');
@@ -106,7 +113,7 @@ export class StandardKernel implements Kernel {
 		let params: any[] = [];
 		if (registration.params) {
 			params = await Promise.all(
-				registration.params.map(param => param.multi ? this.resolveAll(param.token) : this.resolve(param.token)) as Promise<any>[]
+				registration.params.map(param => param.multi ? this.resolveAll(param.token, context) : this.resolve(param.token, context)) as Promise<any>[]
 			);
 		}
 		const instance = new ctor(...params);

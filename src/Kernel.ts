@@ -4,13 +4,18 @@ export const REG_OPTS_METADATA_KEY = 'ioc-opts';
 export enum Lifecycle {
 	Transient = 1,
 	Singleton = 2,
+	Scoped = 3,
+}
+
+export class ResolutionContext {
+	scopedResolutions: Map<InjectionToken<any>, Promise<any>> = new Map();
 }
 
 export type constructor<T> = { new(...args: any[]): T; };
 export type InjectionToken<T = any> = constructor<T> | string | symbol;
 export type ParamInjectionToken<T> = { token: InjectionToken<T>, multi: boolean };
 export type RegistrationOptions<T> = { lifecycle?: Lifecycle; initialize?: (instance: T) => Promise<void> | void };
-export type Registration<T = any> = { resolve: () => T | Promise<T>; params?: ParamInjectionToken<T>[]; opts?: RegistrationOptions<T>; };
+export type Registration<T = any> = { resolve: (context: ResolutionContext) => T | Promise<T>; params?: ParamInjectionToken<T>[]; opts?: RegistrationOptions<T>; };
 
 export interface KernelModule {
 	load(kernal: Kernel): void;
