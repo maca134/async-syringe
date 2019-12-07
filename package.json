@@ -4,7 +4,9 @@
 	"description": "Lightweight dependency injection container for JavaScript/TypeScript with async support",
 	"main": "dist/index.js",
 	"scripts": {
-		"build": "rimraf ./dist && tsc"
+		"build": "rimraf ./dist && tsc",
+		"patch": "npm run build && git add ./* && git commit -m \"patch\" && git push && npm version patch",
+		"postversion": "git push && npm publish"
 	},
 	"repository": {
 		"type": "git",
