@@ -7,7 +7,7 @@ Install use `npm install --save @maca134/async-syringe`
 ### Example
 ```typescript
 import 'reflect-metadata';
-import { Container, inject, injectable, singleton, injectAll } from '.';
+import { StandardKernel, Kernel, inject, injectable, singleton, injectAll } from '.';
 
 @injectable()
 export class SomeClass1 {
@@ -44,13 +44,13 @@ export class SomeClass3 {
 }
 
 (async () => {
-	const container = new Container();
+	const kernel: Kernel = new StandardKernel();
 
-	container.registerFactory('SomeNumber', _ => new Promise<number>(r => setTimeout(() => r(1), 1000)));
-	container.registerFactory('SomeNumber', _ => new Promise<number>(r => setTimeout(() => r(2), 1000)));
-	container.registerFactory('SomeNumber', _ => new Promise<number>(r => setTimeout(() => r(3), 1000)));
-	container.registerFactory('SomeNumber', _ => new Promise<number>(r => setTimeout(() => r(4), 1000)));
+	kernel.registerFactory('SomeNumber', _ => new Promise<number>(r => setTimeout(() => r(1), 1000)));
+	kernel.registerFactory('SomeNumber', _ => new Promise<number>(r => setTimeout(() => r(2), 1000)));
+	kernel.registerFactory('SomeNumber', _ => new Promise<number>(r => setTimeout(() => r(3), 1000)));
+	kernel.registerFactory('SomeNumber', _ => new Promise<number>(r => setTimeout(() => r(4), 1000)));
 
-	console.log(await container.resolve(SomeClass3));
+	console.log(await kernel.resolve(SomeClass3));
 })();
 ```
