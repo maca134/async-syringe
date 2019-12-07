@@ -1,6 +1,6 @@
 {
   "name": "@maca134/async-syringe",
-  "version": "1.0.18",
+  "version": "1.0.19",
   "description": "Lightweight dependency injection container for TypeScript with async support",
   "main": "dist/index.js",
   "scripts": {
