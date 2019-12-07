@@ -19,7 +19,7 @@ test('getAll returns all registrations of a given key', () => {
 	registry.set('Foo', registration1);
 	registry.set('Foo', registration2);
 
-	expect(registry.has('Foo1')).toBeTruthy();
+	expect(registry.has('Foo')).toBeTruthy();
 
 	const all = registry.getAll('Foo');
 	expect(Array.isArray(all)).toBeTruthy();
