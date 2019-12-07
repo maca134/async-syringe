@@ -1,7 +1,7 @@
 import {
 	constructor, INJECTION_TOKEN_METADATA_KEY, InjectionToken, Kernel,
-	KernelModule, Lifecycle, ParamInjectionToken, REG_OPTS_METADATA_KEY, 
-	RegistrationOptions
+	KernelModule, Lifecycle, ParamInjectionToken, REG_OPTS_METADATA_KEY,
+	RegistrationOptions, Registration
 } from './Kernel';
 import { Registry } from './Registry';
 
@@ -68,23 +68,34 @@ export class StandardKernel implements Kernel {
 		if (!registration) {
 			throw new Error(`${String(token)} token not found`);
 		}
-		const isSingleton = registration.opts && registration.opts.lifecycle && registration.opts.lifecycle === Lifecycle.Singleton;
-		if (isSingleton && this._singletons.has(token)) {
-			return this._singletons.get(token) as Promise<T>;
-		}
-		const instance = Promise.resolve(registration.resolve());
-		if (isSingleton) {
-			this._singletons.set(token, instance);
-		}
-		return instance;
+		return this.resolveRegistration(token, registration);
 	}
 
 	resolveAll<T>(token: InjectionToken<T>): Promise<T[]> {
-		return Promise.all(this._registry.getAll<T>(token).map(registration => registration.resolve()));
+		return Promise.all(this._registry.getAll<T>(token).map(registration => this.resolveRegistration(token, registration)));
 	}
 
 	load<T extends KernelModule>(module: T) {
 		module.load(this);
+	}
+
+	private resolveRegistration<T>(token: InjectionToken<T>, registration: Registration<T>) {
+		const lifecycle: Lifecycle = registration.opts && registration.opts.lifecycle ? registration.opts.lifecycle : Lifecycle.Singleton;
+
+		switch (lifecycle) {
+			case Lifecycle.Singleton:
+				if (this._singletons.has(token)) {
+					return this._singletons.get(token) as Promise<T>;
+				}
+				const instance = Promise.resolve(registration.resolve());
+				this._singletons.set(token, instance);
+				return instance;
+
+			case Lifecycle.Transient:
+				return Promise.resolve(registration.resolve());
+					
+		}
+		throw new Error('unknown lifecycle');
 	}
 
 	private async resolveClass<T>(token: InjectionToken<T>, ctor: constructor<T>) {

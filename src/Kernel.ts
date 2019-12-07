@@ -2,8 +2,8 @@ export const INJECTION_TOKEN_METADATA_KEY = 'ioc-tokens';
 export const REG_OPTS_METADATA_KEY = 'ioc-opts';
 
 export enum Lifecycle {
-	Transient,
-	Singleton
+	Transient = 1,
+	Singleton = 2,
 }
 
 export type constructor<T> = { new(...args: any[]): T; };
