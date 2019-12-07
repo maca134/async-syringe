@@ -98,17 +98,10 @@ export class StandardKernel implements Kernel {
 				registration.params.map(param => param.multi ? this.resolveAll(param.token) : this.resolve(param.token)) as Promise<any>[]
 			);
 		}
-		const instance = new Promise<T>(async (resolve, reject) => {
-			const instance = new ctor(...params);
-			try {
-				if (registration.opts && registration.opts.initialize) {
-					await registration.opts.initialize(instance);
-				}
-			} catch (err) {
-				return reject(err);
-			}
-			resolve(instance);
-		});
+		const instance = new ctor(...params);
+		if (registration.opts && registration.opts.initialize) {
+			await registration.opts.initialize(instance);
+		}
 		return instance;
 	}
 }
