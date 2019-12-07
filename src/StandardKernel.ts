@@ -4,9 +4,9 @@ import {
 	RegistrationOptions, Registration, ResolutionContext
 } from './Kernel';
 import { Registry } from './Registry';
+import { singleton } from './decorators/singleton';
 
-
-
+@singleton()
 export class StandardKernel implements Kernel {
 	private _singletons = new Map<InjectionToken<any>, Promise<any>>();
 	private _registry = new Registry();
