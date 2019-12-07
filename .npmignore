@@ -20,7 +20,7 @@ typescript/
 .prettierrc.yml
 .huskyrc.json
 .nvmrc
-.jest.config.js
+jest.config.js
 tsconfig.test.json
 .gitattributes
 
