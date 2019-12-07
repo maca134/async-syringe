@@ -8,7 +8,7 @@ module.exports = {
 		'types\\.ts',
 		'index\\.ts',
 		'.+\\.d\\.ts',
-		'\\.test\\.ts'
+		'\\.spec\\.ts'
 	],
 	globals: {
 		'ts-jest': {

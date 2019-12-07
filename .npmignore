@@ -8,7 +8,7 @@ src/
 *.log
 
 # Tests
-*.test.ts
+*.spec.ts
 
 # Configs
 .github/

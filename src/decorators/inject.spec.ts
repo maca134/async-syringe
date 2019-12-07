@@ -11,13 +11,16 @@ test('inject adds correct metadata to class', () => {
 		Foo
 	) as Map<number, ParamInjectionToken<any>>;
 
+	if (!metadata) {
+		throw new Error('metadata is null');
+	}
+
 	const param = metadata.get(0);
 
 	if (!param) {
 		throw new Error('param is null');
 	}
 
-	expect(param).not.toBeUndefined();
 	expect(param).toHaveProperty('token');
 	expect(param).toHaveProperty('multi');
 	expect(param.token).toStrictEqual('foo');

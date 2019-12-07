@@ -63,18 +63,12 @@ export class StandardKernel implements Kernel {
 				typeof param.token === 'function' &&
 				['Number', 'String', 'Array', 'Object', 'Function'].indexOf(
 					param.token.name
-				) > 0
+				) > -1
 			) {
 				throw new Error(
-					`can not inject primitive type at param ${i} in ${
-						ctor.name
-					}(${params
-						.map(p =>
-							typeof p.token === 'function'
-								? p.token.name
-								: p.token
-						)
-						.join(',')})`
+					`can not inject primitive type ${
+						param.token.name
+					} at param ${i} in ${String(token)})`
 				);
 			}
 		}
@@ -91,7 +85,7 @@ export class StandardKernel implements Kernel {
 
 	registerFactory<T>(
 		token: InjectionToken<T>,
-		factory: (container: Kernel) => T | Promise<T>,
+		factory: (kernel: Kernel) => T | Promise<T>,
 		options?: Omit<RegistrationOptions<T>, 'initialize'>
 	): void {
 		this._registry.set<T>(token, {
