@@ -18,14 +18,21 @@ export class SomeClass1 {
 
 @injectable()
 export class SomeClass2 {
-	constructor(public someClass1: SomeClass1, @injectAll('SomeNumber') public someNumbers: number[]) {
+	constructor(
+		public someClass1: SomeClass1, 
+		@injectAll('SomeNumber') public someNumbers: number[]
+	) {
 		console.log('SomeClass2 constructor');
 	}
 }
 
 @singleton<SomeClass3>({ initialize: instance => instance.init() })
 export class SomeClass3 {
-	constructor(public someClass1: SomeClass1, public someClass2: SomeClass2, @inject('SomeNumber') public someNumber: number) {
+	constructor(
+		public someClass1: SomeClass1, 
+		public someClass2: SomeClass2, 
+		@inject('SomeNumber') public someNumber: number
+	) {
 		console.log('SomeClass3 constructor');
 	}
 
