@@ -1,8 +1,11 @@
 {
 	"compilerOptions": {
+		"strict": false,
 		"types": [
 			"jest"
-		]
+		],
+		"experimentalDecorators": true,
+		"emitDecoratorMetadata": true
 	},
 	"extends": "./tsconfig.json",
 	"exclude": []
