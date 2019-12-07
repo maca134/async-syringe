@@ -1,4 +1,4 @@
-import { constructor, Lifecycle, REG_OPTS_METADATA_KEY, RegistrationOptions } from '../Container';
+import { constructor, Lifecycle, REG_OPTS_METADATA_KEY, RegistrationOptions } from '../Kernel';
 
 export function injectable<T>(options: RegistrationOptions<T> = { lifecycle: Lifecycle.Transient }): (target: constructor<T>) => void {
 	return (target: constructor<T>) => {

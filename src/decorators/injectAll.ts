@@ -1,4 +1,4 @@
-import { INJECTION_TOKEN_METADATA_KEY, InjectionToken, ParamInjectionToken } from '../Container';
+import { INJECTION_TOKEN_METADATA_KEY, InjectionToken, ParamInjectionToken } from '../Kernel';
 
 export function injectAll<T = any>(token: InjectionToken<T>) {
 	return (target: any, _: string | symbol, parameterIndex: number) => {

@@ -1,4 +1,4 @@
-import { InjectionToken, Registration } from './Container';
+import { InjectionToken, Registration } from './Kernel';
 
 export class Registry {
 	protected _registryMap = new Map<InjectionToken<any>, Registration[]>();

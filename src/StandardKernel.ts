@@ -1,27 +1,14 @@
+import {
+	constructor, INJECTION_TOKEN_METADATA_KEY, InjectionToken, Kernel,
+	KernelModule, Lifecycle, ParamInjectionToken, REG_OPTS_METADATA_KEY, 
+	RegistrationOptions
+} from './Kernel';
 import { Registry } from './Registry';
 
-export const INJECTION_TOKEN_METADATA_KEY = 'ioc-tokens';
-export const REG_OPTS_METADATA_KEY = 'ioc-opts';
-
-export enum Lifecycle {
-	Transient,
-	Singleton
-}
-
-export type constructor<T> = { new(...args: any[]): T; };
-export type InjectionToken<T = any> = constructor<T> | string | symbol;
-export type ParamInjectionToken<T> = { token: InjectionToken<T>, multi: boolean };
-export type RegistrationOptions<T> = { lifecycle?: Lifecycle; initialize?: (instance: T) => Promise<void> | void };
-export type Registration<T = any> = { resolve: () => T | Promise<T>; params?: ParamInjectionToken<T>[]; opts?: RegistrationOptions<T>; };
-
-export class Container {
+export class StandardKernel implements Kernel {
 	private _singletons = new Map<InjectionToken<any>, Promise<any>>();
 	private _registry = new Registry();
 
-	registerClass<T>(token: InjectionToken<T>, ctor: constructor<T>, options: RegistrationOptions<T>): void;
-	registerClass<T>(token: InjectionToken<T>, ctor: constructor<T>): void;
-	registerClass<T>(token: InjectionToken<T>, options: RegistrationOptions<T>): void;
-	registerClass<T>(token: InjectionToken<T>): void;
 	registerClass<T>(token: InjectionToken<T>, ctorOrOptions?: constructor<T> | RegistrationOptions<T>, options?: RegistrationOptions<T>) {
 		if (typeof ctorOrOptions === 'object') {
 			options = ctorOrOptions;
@@ -61,7 +48,7 @@ export class Container {
 		this._registry.set<T>(token, { resolve: () => value });
 	}
 
-	registerFactory<T>(token: InjectionToken<T>, factory: (container: Container) => T | Promise<T>, options?: Omit<RegistrationOptions<T>, 'initialize'>) {
+	registerFactory<T>(token: InjectionToken<T>, factory: (container: Kernel) => T | Promise<T>, options?: Omit<RegistrationOptions<T>, 'initialize'>) {
 		this._registry.set<T>(token, { resolve: () => factory(this), opts: options });
 	}
 
@@ -95,6 +82,10 @@ export class Container {
 
 	resolveAll<T>(token: InjectionToken<T>): Promise<T[]> {
 		return Promise.all(this._registry.getAll<T>(token).map(registration => registration.resolve()));
+	}
+
+	load<T extends KernelModule>(module: T) {
+		module.load(this);
 	}
 
 	private async resolveClass<T>(token: InjectionToken<T>, ctor: constructor<T>) {
