@@ -13,11 +13,10 @@ export class StandardKernel implements Kernel {
 		if (typeof ctorOrOptions === 'object') {
 			options = ctorOrOptions;
 		}
-
 		let ctor: constructor<T>;
 		if (typeof ctorOrOptions === 'function') {
 			ctor = ctorOrOptions;
-		} else if (!ctorOrOptions && typeof token === 'function') {
+		} else if ((!ctorOrOptions || typeof ctorOrOptions === 'object') && typeof token === 'function') {
 			ctor = token;
 		} else {
 			throw new Error(`no ctor provided for ${String(token)}`);
