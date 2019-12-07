@@ -51,6 +51,6 @@ export class SomeClass3 {
 	container.registerFactory('SomeNumber', _ => new Promise<number>(r => setTimeout(() => r(3), 1000)));
 	container.registerFactory('SomeNumber', _ => new Promise<number>(r => setTimeout(() => r(4), 1000)));
 
-	console.log(await container.resolveAll(SomeClass3));
+	console.log(await container.resolve(SomeClass3));
 })();
 ```
