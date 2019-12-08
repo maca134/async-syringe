@@ -70,7 +70,7 @@ import { injectable, StandardKernel } from '../..';
 	@injectable<Bar>({ initialize: instance => instance.init() })
 	class Bar {
 		init(): Promise<any> {
-			return new Promise(resolve => setTimeout(() => resolve(), 1000));
+			return new Promise(resolve => setTimeout(() => resolve(), 4000));
 		}
 	}
 
