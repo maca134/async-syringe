@@ -18,6 +18,10 @@ export class StandardKernel implements Kernel {
 	private _singletons = new Map<InjectionToken<any>, Promise<any>>();
 	private _registry = new Registry();
 
+	constructor() {
+		this.registerValue(StandardKernel, this);
+	}
+
 	registerClass<T>(
 		token: InjectionToken<T>,
 		ctorOrOptions?: constructor<T> | RegistrationOptions<T>,

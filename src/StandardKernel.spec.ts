@@ -252,3 +252,7 @@ test('load module', async () => {
 	const foo = await kernel.resolve(Foo);
 	expect(foo).toBeInstanceOf(Foo);
 });
+
+test('get kernel', async () => {
+	expect(kernel === (await kernel.resolve(StandardKernel))).toBeTruthy();
+});
