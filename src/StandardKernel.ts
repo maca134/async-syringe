@@ -20,6 +20,7 @@ export class StandardKernel implements Kernel {
 
 	constructor() {
 		this.registerValue(StandardKernel, this);
+		this.registerValue('Kernel', this);
 	}
 
 	registerClass<T>(
