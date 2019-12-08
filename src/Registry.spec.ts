@@ -1,5 +1,10 @@
 import { Registry } from './Registry';
-import { Registration, Lifecycle } from './Kernel';
+import {
+	Registration,
+	Lifecycle,
+	ValueRegistration,
+	RegistrationType
+} from './Kernel';
 
 let registry: Registry;
 beforeEach(() => {
@@ -7,13 +12,13 @@ beforeEach(() => {
 });
 
 test('getAll returns all registrations of a given key', () => {
-	const registration1: Registration = {
-		resolve: () => 'provider',
-		opts: { lifecycle: Lifecycle.Singleton }
+	const registration1: ValueRegistration = {
+		value: 'provider',
+		type: RegistrationType.Value
 	};
-	const registration2: Registration = {
-		resolve: () => 'provider',
-		opts: { lifecycle: Lifecycle.Singleton }
+	const registration2: ValueRegistration = {
+		value: 'provider',
+		type: RegistrationType.Value
 	};
 
 	registry.set('Foo', registration1);
@@ -30,11 +35,13 @@ test('getAll returns all registrations of a given key', () => {
 
 test('get returns the last registration', () => {
 	const registration1: Registration = {
-		resolve: () => 'provider',
+		value: () => 'provider',
+		type: RegistrationType.Factory,
 		opts: { lifecycle: Lifecycle.Singleton }
 	};
 	const registration2: Registration = {
-		resolve: () => 'provider',
+		value: () => 'provider',
+		type: RegistrationType.Factory,
 		opts: { lifecycle: Lifecycle.Singleton }
 	};
 
@@ -52,8 +59,8 @@ test('get returns null when there is no registration', () => {
 
 test('clear removes all registrations', () => {
 	const registration: Registration = {
-		resolve: () => 'provider',
-		opts: { lifecycle: Lifecycle.Singleton }
+		type: RegistrationType.Value,
+		value: 'provider'
 	};
 
 	registry.set('Foo', registration);
@@ -65,8 +72,8 @@ test('clear removes all registrations', () => {
 
 test('setAll replaces everything with new value', () => {
 	const registration: Registration = {
-		resolve: () => 'provider',
-		opts: { lifecycle: Lifecycle.Singleton }
+		type: RegistrationType.Value,
+		value: 'provider'
 	};
 
 	expect(registry.has('Foo')).toBeFalsy();
