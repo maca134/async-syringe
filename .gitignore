@@ -65,3 +65,4 @@ dist/
 
 # MacOS specific files
 .DS_Store
+src/examples/package-lock.json

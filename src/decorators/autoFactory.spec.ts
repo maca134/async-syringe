@@ -1,10 +1,10 @@
 import 'reflect-metadata';
-import { inject } from './inject';
 import { INJECTION_TOKEN_METADATA_KEY, ParamInjectionToken } from '../Kernel';
+import { autoFactory } from './autoFactory';
 
-test('inject adds correct metadata to class', () => {
+test('injectAll adds correct metadata to class', () => {
 	class Foo {
-		constructor(@inject('foo') public foo: string) {}
+		constructor(@autoFactory('foo') public foo: any) {}
 	}
 	const metadata = Reflect.getOwnMetadata(
 		INJECTION_TOKEN_METADATA_KEY,
@@ -22,9 +22,9 @@ test('inject adds correct metadata to class', () => {
 	}
 
 	expect(param).toHaveProperty('token');
-	expect(param).toHaveProperty('multi');
 	expect(param.token).toStrictEqual('foo');
+	expect(param).toHaveProperty('multi');
 	expect(param.multi).toStrictEqual(false);
 	expect(param).toHaveProperty('autoFactory');
-	expect(param.autoFactory).toStrictEqual(false);
+	expect(param.autoFactory).toStrictEqual(true);
 });

@@ -28,9 +28,9 @@ export type RegistrationOptions<T> = {
 	lifecycle?: Lifecycle;
 
 	/**
-	 * runs after the class is constucted
+	 * runs after the class is constucted and can return a promise
 	 */
-	initialize?: (instance: T) => Promise<void> | void;
+	initialize?: (instance: T) => any;
 };
 
 export type ResolutionContext = {
@@ -41,12 +41,74 @@ export type InjectionToken<T = any> = constructor<T> | string | symbol;
 export type ParamInjectionToken<T> = {
 	token: InjectionToken<T>;
 	multi: boolean;
+	autoFactory: boolean;
 };
-export type Registration<T = any> = {
-	resolve: (context: ResolutionContext) => T | Promise<T>;
-	params?: ParamInjectionToken<T>[];
-	opts?: RegistrationOptions<T>;
-};
+export enum RegistrationType {
+	Class = 1,
+	Factory = 2,
+	Value = 3,
+	Token = 4
+}
+
+export interface RegistrationBase {
+	type: RegistrationType;
+}
+
+export interface TokenRegistration<T = any> extends RegistrationBase {
+	type: RegistrationType.Token;
+	value: InjectionToken<T>;
+}
+
+export interface ValueRegistration<T = any> extends RegistrationBase {
+	type: RegistrationType.Value;
+	value: T;
+}
+
+export interface FactoryRegistration<T = any> extends RegistrationBase {
+	type: RegistrationType.Factory;
+	value: (kernel: Kernel) => T | Promise<T>;
+	opts: Omit<RegistrationOptions<T>, 'initialize'>;
+}
+
+export interface ClassRegistration<T = any> extends RegistrationBase {
+	type: RegistrationType.Class;
+	params: ParamInjectionToken<T>[];
+	opts: RegistrationOptions<T>;
+	value: constructor<T>;
+}
+
+export type Registration<T = any> =
+	| TokenRegistration<T>
+	| ValueRegistration<T>
+	| FactoryRegistration<T>
+	| ClassRegistration<T>;
+
+export function isTokenRegistration<T>(
+	reg: Registration<T>
+): reg is TokenRegistration<T> {
+	return reg.type === RegistrationType.Token;
+}
+
+export function isValueRegistration<T>(
+	reg: Registration<T>
+): reg is ValueRegistration<T> {
+	return reg.type === RegistrationType.Value;
+}
+
+export function isFactoryRegistration<T>(
+	reg: Registration<T>
+): reg is FactoryRegistration<T> {
+	return reg.type === RegistrationType.Factory;
+}
+
+export function isClassRegistration<T>(
+	reg: Registration<T>
+): reg is ClassRegistration<T> {
+	return reg.type === RegistrationType.Class;
+}
+
+export type InjectParam = { index: number; value: any };
+
 export type Node = { name: string; lifecycle: string; children: Node[] };
 
 export interface KernelModule {
@@ -135,7 +197,7 @@ export interface Kernel {
 	 * @param token injection token
 	 * @return An instance or promise of T
 	 */
-	resolve<T>(token: InjectionToken<T>): Promise<T> | T;
+	resolve<T>(token: InjectionToken<T>, params?: InjectParam[]): Promise<T>;
 
 	/**
 	 * Resolve all registrations for the given injection token.
@@ -161,4 +223,12 @@ export interface Kernel {
 	 * @return tree node for injection token
 	 */
 	dependencyTree<T>(token: InjectionToken<T>): Node;
+
+	/**
+	 * Check if a token is registered with the kernel
+	 *
+	 * @param token  injection token
+	 * @param resursive check parent kernels
+	 */
+	isRegistered<T>(token: InjectionToken<T>, recursive?: boolean): boolean;
 }

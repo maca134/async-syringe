@@ -25,4 +25,6 @@ test('injectAll adds correct metadata to class', () => {
 	expect(param).toHaveProperty('multi');
 	expect(param.token).toStrictEqual('foo');
 	expect(param.multi).toStrictEqual(true);
+	expect(param).toHaveProperty('autoFactory');
+	expect(param.autoFactory).toStrictEqual(false);
 });

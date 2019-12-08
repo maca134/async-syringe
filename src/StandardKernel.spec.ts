@@ -152,11 +152,38 @@ test('register class with primitive types', async () => {
 		constructor(public foo: () => void) {}
 	}
 
-	expect(() => kernel.registerClass(Foo1)).toThrowError();
-	expect(() => kernel.registerClass(Foo2)).toThrowError();
-	expect(() => kernel.registerClass(Foo3)).toThrowError();
-	expect(() => kernel.registerClass(Foo4)).toThrowError();
-	expect(() => kernel.registerClass(Foo5)).toThrowError();
+	kernel.registerClass(Foo1);
+	kernel.registerClass(Foo2);
+	kernel.registerClass(Foo3);
+	kernel.registerClass(Foo4);
+	kernel.registerClass(Foo5);
+
+	expect.assertions(5);
+	try {
+		await kernel.resolve(Foo1);
+	} catch (err) {
+		expect(err).toBeInstanceOf(Error);
+	}
+	try {
+		await kernel.resolve(Foo2);
+	} catch (err) {
+		expect(err).toBeInstanceOf(Error);
+	}
+	try {
+		await kernel.resolve(Foo3);
+	} catch (err) {
+		expect(err).toBeInstanceOf(Error);
+	}
+	try {
+		await kernel.resolve(Foo4);
+	} catch (err) {
+		expect(err).toBeInstanceOf(Error);
+	}
+	try {
+		await kernel.resolve(Foo5);
+	} catch (err) {
+		expect(err).toBeInstanceOf(Error);
+	}
 });
 
 test('resolveAll', async () => {
@@ -255,4 +282,80 @@ test('load module', async () => {
 
 test('get kernel', async () => {
 	expect(kernel === (await kernel.resolve(StandardKernel))).toBeTruthy();
+});
+
+test('childcontainers', async () => {
+	class Foo1 {}
+	class Foo2 {}
+	class Foo3 {}
+	class Foo4 {}
+
+	kernel.registerClass('Foo1', Foo1);
+	kernel.registerClass('Foo1', Foo1);
+	kernel.registerClass('Foo1', Foo1);
+	kernel.registerClass('Foo2', Foo2);
+
+	const childKernel = kernel.getChildKernel();
+	childKernel.registerClass('Foo3', Foo3);
+	childKernel.registerClass('Foo4', Foo4);
+
+	expect(await childKernel.resolve('Foo1')).toBeInstanceOf(Foo1);
+	expect(await childKernel.resolve('Foo2')).toBeInstanceOf(Foo2);
+	expect(await childKernel.resolve('Foo3')).toBeInstanceOf(Foo3);
+	expect(await childKernel.resolve('Foo4')).toBeInstanceOf(Foo4);
+
+	expect(await kernel.resolve('Foo1')).toBeInstanceOf(Foo1);
+	expect(await kernel.resolve('Foo2')).toBeInstanceOf(Foo2);
+	expect(() => kernel.resolve('Foo3')).toThrowError('Foo3 token not found');
+	expect(() => kernel.resolve('Foo4')).toThrowError('Foo4 token not found');
+	const allFoo1 = await childKernel.resolveAll('Foo1');
+	expect(Array.isArray(allFoo1)).toBeTruthy();
+	expect(allFoo1).toHaveLength(3);
+});
+
+test('is registered', () => {
+	const childKernel = kernel.getChildKernel();
+	kernel.registerValue('Foo', 'Bar');
+	childKernel.registerValue('Bar', 'Foo');
+	expect(kernel.isRegistered('Foo', true)).toBeTruthy();
+	expect(kernel.isRegistered('Foo')).toBeTruthy();
+	expect(kernel.isRegistered('Bar')).toBeFalsy();
+	expect(kernel.isRegistered('Bar', true)).toBeFalsy();
+	expect(childKernel.isRegistered('Foo')).toBeFalsy();
+	expect(childKernel.isRegistered('Foo', true)).toBeTruthy();
+	expect(childKernel.isRegistered('Bar')).toBeTruthy();
+	expect(childKernel.isRegistered('Bar', true)).toBeTruthy();
+});
+
+test('class initialize', async () => {
+	const mockedInitialize = jest.fn();
+	@injectable({ initialize: mockedInitialize })
+	class Foo {}
+	await kernel.resolve(Foo);
+	expect(mockedInitialize).toHaveBeenCalled();
+});
+
+test('custom injection params', async () => {
+	class Bar {}
+
+	@injectable()
+	class Foo {
+		constructor(public a: number, public bar: Bar, public b: number) {}
+	}
+
+	kernel.registerClass(Foo);
+	const foo = await kernel.resolve(Foo, [
+		{
+			index: 0,
+			value: 1
+		},
+		{
+			index: 2,
+			value: 2
+		}
+	]);
+	expect(foo).toBeInstanceOf(Foo);
+	expect(foo.bar).toBeInstanceOf(Bar);
+	expect(foo.a).toStrictEqual(1);
+	expect(foo.b).toStrictEqual(2);
 });
