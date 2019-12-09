@@ -5,9 +5,47 @@
 [![downloads](https://img.shields.io/npm/dm/@maca134/async-syringe)](https://www.npmjs.com/package/@maca134/async-syringe)
 [![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.me/maca134)
 
-Based on [tsyringe](https://github.com/microsoft/tsyringe) but with support for async factories/init and does not use any global variables. I found this to be a problem when trying to inject from multiple modules.
+Based on [tsyringe](https://github.com/microsoft/tsyringe) but with support for async factories/init and does not use any global variables.
 
-Install use `npm install --save @maca134/async-syringe`
+## Installation
+
+Install by `npm`
+
+```sh
+npm install --save @maca134/async-syringe
+```
+
+**or** install with `yarn` (this project is developed using `yarn`)
+
+```sh
+yarn add @maca134/async-syringe
+```
+
+Modify your `tsconfig.json` to include the following settings
+
+```json
+{
+  "compilerOptions": {
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true
+  }
+}
+```
+
+Add a polyfill for the Reflect API (examples below use reflect-metadata). You can use:
+
+- [reflect-metadata](https://www.npmjs.com/package/reflect-metadata)
+- [core-js (core-js/es7/reflect)](https://www.npmjs.com/package/core-js)
+- [reflection](https://www.npmjs.com/package/@abraham/reflection)
+
+The Reflect polyfill import should only be added once, and before before DI is used:
+
+```typescript
+// main.ts
+import "reflect-metadata";
+
+// Your code here...
+```
 
 ### Examples
 

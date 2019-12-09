@@ -359,3 +359,18 @@ test('custom injection params', async () => {
 	expect(foo.a).toStrictEqual(1);
 	expect(foo.b).toStrictEqual(2);
 });
+
+test('replacing classes', async () => {
+	class Foo {}
+	class Bar extends Foo {}
+
+	@injectable()
+	class FooBar {
+		constructor(public foo: Foo) {}
+	}
+
+	kernel.registerClass(Foo, Bar);
+	const fooBar = await kernel.resolve(FooBar);
+	expect(fooBar).toBeInstanceOf(FooBar);
+	expect(fooBar.foo).toBeInstanceOf(Bar);
+});
