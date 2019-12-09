@@ -15,7 +15,7 @@ Install by `npm`
 npm install --save @maca134/async-syringe
 ```
 
-**or** install with `yarn` (this project is developed using `yarn`)
+**or** install with `yarn`
 
 ```sh
 yarn add @maca134/async-syringe
