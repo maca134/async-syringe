@@ -2,6 +2,7 @@ import 'reflect-metadata';
 import { StandardKernel } from './StandardKernel';
 import { injectable } from './decorators/injectable';
 import { injectAll } from './decorators/injectAll';
+import { inject } from './decorators/inject';
 import { singleton } from './decorators/singleton';
 import { Lifecycle, KernelModule, Kernel } from './Kernel';
 
@@ -373,4 +374,14 @@ test('replacing classes', async () => {
 	const fooBar = await kernel.resolve(FooBar);
 	expect(fooBar).toBeInstanceOf(FooBar);
 	expect(fooBar.foo).toBeInstanceOf(Bar);
+});
+
+test('optional inject', async () => {
+	@injectable()
+	class FooBar {
+		constructor(@inject('Foo', true) public foo: string) {}
+	}
+	const fooBar = await kernel.resolve(FooBar);
+	expect(fooBar).toBeInstanceOf(FooBar);
+	expect(fooBar.foo).toBeUndefined();
 });

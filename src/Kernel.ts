@@ -41,6 +41,7 @@ export type InjectionToken<T = any> = constructor<T> | string | symbol;
 export type ParamInjectionToken<T> = {
 	token: InjectionToken<T>;
 	multi: boolean;
+	optional: boolean;
 	autoFactory: boolean;
 };
 export enum RegistrationType {

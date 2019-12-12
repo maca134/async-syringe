@@ -19,6 +19,8 @@ import {
 import { Registry } from './Registry';
 import { AutoFactory } from './AutoFactory';
 
+export class TokenNotExist extends Error {}
+
 export class StandardKernel implements Kernel {
 	private _singletons = new Map<InjectionToken<any>, Promise<any>>();
 	private _registry = new Registry();
@@ -69,7 +71,8 @@ export class StandardKernel implements Kernel {
 				paramTokens.get(i) || {
 					token: type,
 					multi: false,
-					autoFactory: false
+					autoFactory: false,
+					optional: false
 				}
 		);
 		// need to save value and not a scoped function
@@ -122,7 +125,7 @@ export class StandardKernel implements Kernel {
 		}
 		const registration = this._registry.get<T>(token);
 		if (!registration) {
-			throw new Error(`${String(token)} token not found`);
+			throw new TokenNotExist(`${String(token)} token not found`);
 		}
 		if (injectParams.length > 0 && isClassRegistration(registration)) {
 			const kernel = this.getChildKernel() as StandardKernel;
@@ -145,7 +148,8 @@ export class StandardKernel implements Kernel {
 						return {
 							token,
 							multi: param.multi,
-							autoFactory: param.autoFactory
+							autoFactory: param.autoFactory,
+							optional: param.optional
 						};
 					})
 				}
@@ -191,11 +195,26 @@ export class StandardKernel implements Kernel {
 			}
 			const registration = kernel._registry.get<T>(token);
 			if (!registration) {
-				throw new Error(`${String(token)} token not found`);
+				throw new TokenNotExist(`${String(token)} token not found`);
 			}
 
 			const children = isClassRegistration(registration)
-				? registration.params.map(param => resolve(param.token))
+				? (registration.params
+						.map(param => {
+							try {
+								return resolve(param.token);
+							} catch (err) {
+								if (
+									err instanceof TokenNotExist &&
+									param.optional
+								) {
+									return undefined;
+								} else {
+									throw err;
+								}
+							}
+						})
+						.filter(i => !!i) as Node[])
 				: [];
 			const lifecycle: Lifecycle =
 				isClassRegistration(registration) ||
@@ -282,12 +301,23 @@ export class StandardKernel implements Kernel {
 				}
 				const params: any[] = await Promise.all(
 					registration.params.map(param => {
-						if (param.multi) {
-							return this.resolveAll(param.token, context);
-						} else if (param.autoFactory) {
-							return new AutoFactory(this, param.token);
-						} else {
-							return this.resolve(param.token, [], context);
+						try {
+							if (param.multi) {
+								return this.resolveAll(param.token, context);
+							} else if (param.autoFactory) {
+								return new AutoFactory(this, param.token);
+							} else {
+								return this.resolve(param.token, [], context);
+							}
+						} catch (err) {
+							if (
+								err instanceof TokenNotExist &&
+								param.optional
+							) {
+								return undefined;
+							} else {
+								throw err;
+							}
 						}
 					}) as Promise<any>[]
 				);

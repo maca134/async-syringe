@@ -9,12 +9,17 @@ import {
  *
  * @param token injection token
  */
-export function inject<T = any>(token: InjectionToken<T>) {
+export function inject<T = any>(token: InjectionToken<T>, optional = false) {
 	return (target: any, _: string | symbol, parameterIndex: number) => {
 		const tokens: Map<number, ParamInjectionToken<T>> =
 			Reflect.getOwnMetadata(INJECTION_TOKEN_METADATA_KEY, target) ||
 			new Map<number, ParamInjectionToken<T>>();
-		tokens.set(parameterIndex, { token, multi: false, autoFactory: false });
+		tokens.set(parameterIndex, {
+			token,
+			multi: false,
+			autoFactory: false,
+			optional
+		});
 		Reflect.defineMetadata(INJECTION_TOKEN_METADATA_KEY, tokens, target);
 	};
 }
