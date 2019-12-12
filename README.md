@@ -49,7 +49,7 @@ import "reflect-metadata";
 
 ### Examples
 
-Working examples can be found in the src folder. Here is the code:
+Working examples can be found in the root folder. Here is the code:
 
 # Simple
 ```typescript
