@@ -6,7 +6,7 @@
   "scripts": {
     "build": "npm run clean && tsc",
     "clean": "rimraf ./dist",
-    "patch": "npm run build && git add ./* && git commit -m \"patch\" && git push && npm version patch",
+    "patch": "npm run build && git add ./* & git commit -m \"patch\" & git push & npm version patch",
     "postversion": "git push && npm publish",
     "test": "npm run lint && jest --config jest.config.js",
     "test:inspect": "npm run lint && node --inspect-brk ./node_modules/jest/bin/jest.js --runInBand --config jest.config.js",
