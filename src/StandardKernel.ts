@@ -295,7 +295,7 @@ export class StandardKernel implements Kernel {
 						].indexOf(param.token.name) > -1
 					) {
 						throw new Error(
-							`can not inject primitive type ${param.token.name}`
+							`can not inject primitive type ${param.token.name} - ${registration.value.name}`
 						);
 					}
 				}
