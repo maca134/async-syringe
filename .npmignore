@@ -24,6 +24,9 @@ jest.config.js
 tsconfig.test.json
 .gitattributes
 
+# Example
+examples/node_modules/
+
 # Lock files
 package-lock.json
 
