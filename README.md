@@ -1,7 +1,6 @@
 # AsyncSyringe
 [![build status](https://img.shields.io/travis/maca134/async-syringe)](https://travis-ci.org/maca134/async-syringe)
 [![npm version](https://badge.fury.io/js/%40maca134%2Fasync-syringe.svg)](https://badge.fury.io/js/%40maca134%2Fasync-syringe)
-[![dependencies Status](https://david-dm.org/maca134/async-syringe/status.svg)](https://david-dm.org/maca134/async-syringe)
 [![downloads](https://img.shields.io/npm/dm/@maca134/async-syringe)](https://www.npmjs.com/package/@maca134/async-syringe)
 [![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.me/maca134)
 
