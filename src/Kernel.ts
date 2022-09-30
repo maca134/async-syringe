@@ -229,7 +229,7 @@ export interface Kernel {
 	 * Check if a token is registered with the kernel
 	 *
 	 * @param token  injection token
-	 * @param resursive check parent kernels
+	 * @param recursive check parent kernels
 	 */
 	isRegistered<T>(token: InjectionToken<T>, recursive?: boolean): boolean;
 }
