@@ -3,17 +3,15 @@ import { injectable } from './injectable';
 import {
 	REG_OPTS_METADATA_KEY,
 	Lifecycle,
-	RegistrationOptions
+	RegistrationOptions,
 } from '../Kernel';
 
 test('injectable adds correct metadata to class', () => {
 	@injectable()
-	class Foo {
-		constructor() {}
-	}
+	class Foo {}
 	const metadata = Reflect.getOwnMetadata(
 		REG_OPTS_METADATA_KEY,
-		Foo
+		Foo,
 	) as RegistrationOptions<Foo>;
 
 	if (!metadata) {

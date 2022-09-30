@@ -15,10 +15,10 @@ export class AutoFactory<T extends constructor<any>> implements Factory<T> {
 			(args as any[]).reduce((p, c, i) => {
 				p.push({
 					index: i,
-					value: c
+					value: c,
 				});
 				return p;
-			}, new Array<InjectParam>())
+			}, new Array<InjectParam>()),
 		);
 	}
 }

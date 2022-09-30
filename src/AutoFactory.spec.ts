@@ -20,18 +20,18 @@ test('autofactory', async () => {
 	expect(kernel.resolve.mock.calls[0][0] === 'token').toBeTruthy();
 	expect(
 		kernel.resolve.mock.calls[0][1] &&
-			kernel.resolve.mock.calls[0][1][0].index === 0
+			kernel.resolve.mock.calls[0][1][0].index === 0,
 	).toBeTruthy();
 	expect(
 		kernel.resolve.mock.calls[0][1] &&
-			kernel.resolve.mock.calls[0][1][0].value === 'foo'
+			kernel.resolve.mock.calls[0][1][0].value === 'foo',
 	).toBeTruthy();
 	expect(
 		kernel.resolve.mock.calls[0][1] &&
-			kernel.resolve.mock.calls[0][1][1].index === 1
+			kernel.resolve.mock.calls[0][1][1].index === 1,
 	).toBeTruthy();
 	expect(
 		kernel.resolve.mock.calls[0][1] &&
-			kernel.resolve.mock.calls[0][1][1].value === 'bar'
+			kernel.resolve.mock.calls[0][1][1].value === 'bar',
 	).toBeTruthy();
 });

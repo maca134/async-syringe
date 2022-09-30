@@ -64,7 +64,7 @@ test('resolve factory', async () => {
 	kernel.registerFactory('factory', mockedFactory);
 	const [resolveA, resolveB] = await Promise.all([
 		kernel.resolve('factory'),
-		kernel.resolve('factory')
+		kernel.resolve('factory'),
 	]);
 	expect(resolveA).toStrictEqual('hello world');
 	expect(resolveB).toStrictEqual('hello world');
@@ -74,11 +74,11 @@ test('resolve factory', async () => {
 test('resolve singleton factory', async () => {
 	const mockedFactory = jest.fn().mockReturnValue('hello world');
 	kernel.registerFactory('factory', mockedFactory, {
-		lifecycle: Lifecycle.Singleton
+		lifecycle: Lifecycle.Singleton,
 	});
 	const [resolveA, resolveB] = await Promise.all([
 		kernel.resolve('factory'),
-		kernel.resolve('factory')
+		kernel.resolve('factory'),
 	]);
 	expect(resolveA).toStrictEqual('hello world');
 	expect(resolveB).toStrictEqual('hello world');
@@ -120,7 +120,7 @@ test('register class by token with options', async () => {
 	kernel.registerClass('Foo', Foo, { lifecycle: Lifecycle.Singleton });
 	const [foo1, foo2] = await Promise.all([
 		kernel.resolve('Foo'),
-		kernel.resolve('Foo')
+		kernel.resolve('Foo'),
 	]);
 	expect(foo1).toBeInstanceOf(Foo);
 	expect(foo2).toBeInstanceOf(Foo);
@@ -198,7 +198,7 @@ test('resolveAll', async () => {
 	const allFoo = await kernel.resolveAll<Foo>('Foo');
 	expect(Array.isArray(allFoo)).toBeTruthy();
 	expect(allFoo).toHaveLength(4);
-	expect(allFoo.every(foo => foo instanceof Foo)).toBeTruthy();
+	expect(allFoo.every((foo) => foo instanceof Foo)).toBeTruthy();
 });
 
 test('injectAll', async () => {
@@ -215,7 +215,7 @@ test('injectAll', async () => {
 	expect(foo).toBeInstanceOf(Foo);
 	expect(Array.isArray(foo.bar)).toBeTruthy();
 	expect(foo.bar).toHaveLength(4);
-	expect(foo.bar.every(b => typeof b === 'string')).toBeTruthy();
+	expect(foo.bar.every((b) => typeof b === 'string')).toBeTruthy();
 });
 
 test('dependencyTree', () => {
@@ -237,10 +237,10 @@ test('dependencyTree', () => {
 	expect(tree.lifecycle).toStrictEqual(Lifecycle[Lifecycle.Transient]);
 	expect(tree.children).toHaveLength(2);
 	expect(
-		tree.children.find(child => child.name === 'Bar')
+		tree.children.find((child) => child.name === 'Bar'),
 	).not.toBeUndefined();
 	expect(
-		tree.children.find(child => child.name === 'Foo')
+		tree.children.find((child) => child.name === 'Foo'),
 	).not.toBeUndefined();
 });
 
@@ -348,12 +348,12 @@ test('custom injection params', async () => {
 	const foo = await kernel.resolve(Foo, [
 		{
 			index: 0,
-			value: 1
+			value: 1,
 		},
 		{
 			index: 2,
-			value: 2
-		}
+			value: 2,
+		},
 	]);
 	expect(foo).toBeInstanceOf(Foo);
 	expect(foo.bar).toBeInstanceOf(Bar);

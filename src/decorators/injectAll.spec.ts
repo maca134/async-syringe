@@ -8,7 +8,7 @@ test('injectAll adds correct metadata to class', () => {
 	}
 	const metadata = Reflect.getOwnMetadata(
 		INJECTION_TOKEN_METADATA_KEY,
-		Foo
+		Foo,
 	) as Map<number, ParamInjectionToken<any>>;
 
 	if (!metadata) {

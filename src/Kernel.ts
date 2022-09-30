@@ -15,7 +15,7 @@ export enum Lifecycle {
 	/**
 	 * Creates a single instance per resolve chain
 	 */
-	Scoped = 3
+	Scoped = 3,
 }
 
 /**
@@ -48,7 +48,7 @@ export enum RegistrationType {
 	Class = 1,
 	Factory = 2,
 	Value = 3,
-	Token = 4
+	Token = 4,
 }
 
 export interface RegistrationBase {
@@ -85,25 +85,25 @@ export type Registration<T = any> =
 	| ClassRegistration<T>;
 
 export function isTokenRegistration<T>(
-	reg: Registration<T>
+	reg: Registration<T>,
 ): reg is TokenRegistration<T> {
 	return reg.type === RegistrationType.Token;
 }
 
 export function isValueRegistration<T>(
-	reg: Registration<T>
+	reg: Registration<T>,
 ): reg is ValueRegistration<T> {
 	return reg.type === RegistrationType.Value;
 }
 
 export function isFactoryRegistration<T>(
-	reg: Registration<T>
+	reg: Registration<T>,
 ): reg is FactoryRegistration<T> {
 	return reg.type === RegistrationType.Factory;
 }
 
 export function isClassRegistration<T>(
-	reg: Registration<T>
+	reg: Registration<T>,
 ): reg is ClassRegistration<T> {
 	return reg.type === RegistrationType.Class;
 }
@@ -127,7 +127,7 @@ export interface Kernel {
 	registerClass<T>(
 		token: InjectionToken<T>,
 		ctor: constructor<T>,
-		options: RegistrationOptions<T>
+		options: RegistrationOptions<T>,
 	): void;
 
 	/**
@@ -146,7 +146,7 @@ export interface Kernel {
 	 */
 	registerClass<T>(
 		ctor: constructor<T>,
-		options: RegistrationOptions<T>
+		options: RegistrationOptions<T>,
 	): void;
 
 	/**
@@ -174,7 +174,7 @@ export interface Kernel {
 	registerFactory<T>(
 		token: InjectionToken<T>,
 		factory: (container: Kernel) => T | Promise<T>,
-		options?: Omit<RegistrationOptions<T>, 'initialize'>
+		options?: Omit<RegistrationOptions<T>, 'initialize'>,
 	): void;
 
 	/**

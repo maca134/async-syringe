@@ -8,7 +8,7 @@ import { constructor, Lifecycle, RegistrationOptions } from '../Kernel';
  * @param options registration options
  */
 export function singleton<T>(
-	options: Omit<RegistrationOptions<T>, 'lifecycle'> = {}
+	options: Omit<RegistrationOptions<T>, 'lifecycle'> = {},
 ): (target: constructor<T>) => void {
 	return injectable<T>({ ...options, lifecycle: Lifecycle.Singleton });
 }

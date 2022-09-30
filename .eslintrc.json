@@ -1,0 +1,42 @@
+{
+	"env": {
+		"commonjs": true,
+		"es6": true
+	},
+	"extends": [
+		"eslint:recommended",
+		"plugin:@typescript-eslint/recommended",
+		"plugin:prettier/recommended"
+	],
+	"parser": "@typescript-eslint/parser",
+	"parserOptions": {
+		"ecmaVersion": "latest",
+		"sourceType": "module"
+	},
+	"plugins": [
+		"prettier",
+		"@typescript-eslint"
+	],
+	"globals": {
+		"Atomics": "readonly",
+		"SharedArrayBuffer": "readonly"
+	},
+	"rules": {
+		"@typescript-eslint/explicit-member-accessibility": 0,
+		"@typescript-eslint/ban-types": 0,
+		"@typescript-eslint/no-angle-bracket-type-assertion": 0,
+		"@typescript-eslint/no-explicit-any": 0,
+		"@typescript-eslint/no-non-null-assertion": 0,
+		"@typescript-eslint/no-parameter-properties": 0,
+		"@typescript-eslint/prefer-interface": 0,
+		"@typescript-eslint/indent": 0,
+		"@typescript-eslint/explicit-function-return-type": 0,
+		"@typescript-eslint/no-unused-vars": [
+			"error",
+			{
+				"ignoreRestSiblings": true,
+				"argsIgnorePattern": "^_"
+			}
+		]
+	}
+}
