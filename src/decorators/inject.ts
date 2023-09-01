@@ -10,7 +10,11 @@ import {
  * @param token injection token
  */
 export function inject<T = any>(token: InjectionToken<T>, optional = false) {
-	return (target: any, _: string | symbol, parameterIndex: number) => {
+	return (
+		target: any,
+		_: string | symbol | undefined,
+		parameterIndex: number,
+	) => {
 		const tokens: Map<
 			number,
 			ParamInjectionToken<T>
