@@ -9,7 +9,10 @@ import {
  *
  * @param token injection token
  */
-export function inject<T = any>(token: InjectionToken<T>, optional = false) {
+export function inject<T = any>(
+	token: InjectionToken<T>,
+	optional = false,
+): ParameterDecorator {
 	return (
 		target: any,
 		_: string | symbol | undefined,

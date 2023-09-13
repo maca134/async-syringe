@@ -9,8 +9,14 @@ import {
  *
  * @param token injection token
  */
-export function autoFactory<T = any>(token: InjectionToken<T>) {
-	return (target: any, _: string | symbol, parameterIndex: number) => {
+export function autoFactory<T = any>(
+	token: InjectionToken<T>,
+): ParameterDecorator {
+	return (
+		target: Object,
+		_: string | symbol | undefined,
+		parameterIndex: number,
+	) => {
 		const tokens: Map<
 			number,
 			ParamInjectionToken<T>
