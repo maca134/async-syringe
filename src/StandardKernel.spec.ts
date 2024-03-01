@@ -1,10 +1,11 @@
 import 'reflect-metadata';
+import type { KernelModule, Kernel } from './Kernel';
+import { Lifecycle } from './Kernel';
 import { StandardKernel } from './StandardKernel';
-import { injectable } from './decorators/injectable';
-import { injectAll } from './decorators/injectAll';
 import { inject } from './decorators/inject';
+import { injectAll } from './decorators/injectAll';
+import { injectable } from './decorators/injectable';
 import { singleton } from './decorators/singleton';
-import { Lifecycle, KernelModule, Kernel } from './Kernel';
 
 let kernel: StandardKernel;
 beforeEach(() => {
@@ -23,7 +24,10 @@ test('resolve classes with some having decorators', async () => {
 
 	@injectable()
 	class FooBar {
-		constructor(public foo: Foo, public bar: Bar) {}
+		constructor(
+			public foo: Foo,
+			public bar: Bar
+		) {}
 	}
 
 	const fooBar = await kernel.resolve(FooBar);
@@ -45,7 +49,10 @@ test('resolve classes with singleton', async () => {
 
 	@injectable()
 	class FooBar {
-		constructor(public foo: Foo, public bar: Bar) {}
+		constructor(
+			public foo: Foo,
+			public bar: Bar
+		) {}
 	}
 
 	const fooBar = await kernel.resolve(FooBar);
@@ -118,10 +125,7 @@ test('register class by token', async () => {
 test('register class by token with options', async () => {
 	class Foo {}
 	kernel.registerClass('Foo', Foo, { lifecycle: Lifecycle.Singleton });
-	const [foo1, foo2] = await Promise.all([
-		kernel.resolve('Foo'),
-		kernel.resolve('Foo'),
-	]);
+	const [foo1, foo2] = await Promise.all([kernel.resolve('Foo'), kernel.resolve('Foo')]);
 	expect(foo1).toBeInstanceOf(Foo);
 	expect(foo2).toBeInstanceOf(Foo);
 	expect(foo1 === foo2).toBeTruthy();
@@ -229,19 +233,18 @@ test('dependencyTree', () => {
 
 	@injectable()
 	class FooBar {
-		constructor(public foo: Foo, public bar: Bar) {}
+		constructor(
+			public foo: Foo,
+			public bar: Bar
+		) {}
 	}
 
 	const tree = kernel.dependencyTree(FooBar);
 
 	expect(tree.lifecycle).toStrictEqual(Lifecycle[Lifecycle.Transient]);
 	expect(tree.children).toHaveLength(2);
-	expect(
-		tree.children.find((child) => child.name === 'Bar'),
-	).not.toBeUndefined();
-	expect(
-		tree.children.find((child) => child.name === 'Foo'),
-	).not.toBeUndefined();
+	expect(tree.children.find((child) => child.name === 'Bar')).not.toBeUndefined();
+	expect(tree.children.find((child) => child.name === 'Foo')).not.toBeUndefined();
 });
 
 test('scoped instance', async () => {
@@ -255,7 +258,10 @@ test('scoped instance', async () => {
 
 	@injectable()
 	class Bar {
-		constructor(public scopedFoo: ScopedFoo, public foo: Foo) {}
+		constructor(
+			public scopedFoo: ScopedFoo,
+			public foo: Foo
+		) {}
 	}
 
 	const bar1 = await kernel.resolve(Bar);
@@ -341,7 +347,11 @@ test('custom injection params', async () => {
 
 	@injectable()
 	class Foo {
-		constructor(public a: number, public bar: Bar, public b: number) {}
+		constructor(
+			public a: number,
+			public bar: Bar,
+			public b: number
+		) {}
 	}
 
 	kernel.registerClass(Foo);

@@ -1,15 +1,16 @@
 import 'reflect-metadata';
-import { INJECTION_TOKEN_METADATA_KEY, ParamInjectionToken } from '../Kernel';
+import type { ParamInjectionToken } from '../Kernel';
+import { INJECTION_TOKEN_METADATA_KEY } from '../Kernel';
 import { autoFactory } from './autoFactory';
 
 test('injectAll adds correct metadata to class', () => {
 	class Foo {
 		constructor(@autoFactory('foo') public foo: any) {}
 	}
-	const metadata = Reflect.getOwnMetadata(
-		INJECTION_TOKEN_METADATA_KEY,
-		Foo,
-	) as Map<number, ParamInjectionToken<any>>;
+	const metadata = Reflect.getOwnMetadata(INJECTION_TOKEN_METADATA_KEY, Foo) as Map<
+		number,
+		ParamInjectionToken<any>
+	>;
 
 	if (!metadata) {
 		throw new Error('metadata is null');

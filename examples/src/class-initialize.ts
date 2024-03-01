@@ -4,10 +4,10 @@ import { injectable, StandardKernel } from '../../src';
 (async () => {
 	// to use initialize properly the decorator needs to be typed.
 	// the initialize function can be a promise
-	@injectable<Bar>({ initialize: instance => instance.init() })
+	@injectable<Bar>({ initialize: (instance) => instance.init() })
 	class Bar {
 		init(): Promise<any> {
-			return new Promise(resolve => setTimeout(() => resolve(), 1000));
+			return new Promise((resolve) => setTimeout(() => resolve(), 1000));
 		}
 	}
 

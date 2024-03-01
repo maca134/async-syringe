@@ -1,8 +1,11 @@
-import { constructor, InjectionToken, Kernel } from './Kernel';
-import { Factory } from './Factory';
+import type { Factory } from './Factory';
+import type { constructor, InjectionToken, Kernel } from './Kernel';
 
 export class AutoFactory<T extends constructor<any>> implements Factory<T> {
-	constructor(private _kernel: Kernel, private _token: InjectionToken) {}
+	constructor(
+		private _kernel: Kernel,
+		private _token: InjectionToken
+	) {}
 
 	/**
 	 * create a new instance of T
@@ -12,7 +15,7 @@ export class AutoFactory<T extends constructor<any>> implements Factory<T> {
 	create(...args: ConstructorParameters<T>): Promise<InstanceType<T>> {
 		return this._kernel.resolve<InstanceType<T>>(
 			this._token,
-			args.map((value, index) => ({ index, value })),
+			args.map((value, index) => ({ index, value }))
 		);
 	}
 }

@@ -84,27 +84,19 @@ export type Registration<T = any> =
 	| FactoryRegistration<T>
 	| ClassRegistration<T>;
 
-export function isTokenRegistration<T>(
-	reg: Registration<T>,
-): reg is TokenRegistration<T> {
+export function isTokenRegistration<T>(reg: Registration<T>): reg is TokenRegistration<T> {
 	return reg.type === RegistrationType.Token;
 }
 
-export function isValueRegistration<T>(
-	reg: Registration<T>,
-): reg is ValueRegistration<T> {
+export function isValueRegistration<T>(reg: Registration<T>): reg is ValueRegistration<T> {
 	return reg.type === RegistrationType.Value;
 }
 
-export function isFactoryRegistration<T>(
-	reg: Registration<T>,
-): reg is FactoryRegistration<T> {
+export function isFactoryRegistration<T>(reg: Registration<T>): reg is FactoryRegistration<T> {
 	return reg.type === RegistrationType.Factory;
 }
 
-export function isClassRegistration<T>(
-	reg: Registration<T>,
-): reg is ClassRegistration<T> {
+export function isClassRegistration<T>(reg: Registration<T>): reg is ClassRegistration<T> {
 	return reg.type === RegistrationType.Class;
 }
 
@@ -127,7 +119,7 @@ export interface Kernel {
 	registerClass<T>(
 		token: InjectionToken<T>,
 		ctor: constructor<T>,
-		options: RegistrationOptions<T>,
+		options: RegistrationOptions<T>
 	): void;
 
 	/**
@@ -144,10 +136,7 @@ export interface Kernel {
 	 * @param ctor contructor
 	 * @param options injection options
 	 */
-	registerClass<T>(
-		ctor: constructor<T>,
-		options: RegistrationOptions<T>,
-	): void;
+	registerClass<T>(ctor: constructor<T>, options: RegistrationOptions<T>): void;
 
 	/**
 	 * Register a class directly.
@@ -174,7 +163,7 @@ export interface Kernel {
 	registerFactory<T>(
 		token: InjectionToken<T>,
 		factory: (container: Kernel) => T | Promise<T>,
-		options?: Omit<RegistrationOptions<T>, 'initialize'>,
+		options?: Omit<RegistrationOptions<T>, 'initialize'>
 	): void;
 
 	/**

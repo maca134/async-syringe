@@ -1,9 +1,5 @@
-import {
-	constructor,
-	Lifecycle,
-	REG_OPTS_METADATA_KEY,
-	RegistrationOptions,
-} from '../Kernel';
+import type { constructor, RegistrationOptions } from '../Kernel';
+import { Lifecycle, REG_OPTS_METADATA_KEY } from '../Kernel';
 
 /**
  * Class decorator factory that allows the class' dependencies to be injected
@@ -11,7 +7,7 @@ import {
  * @param options registration options
  */
 export function injectable<T>(
-	options: RegistrationOptions<T> = { lifecycle: Lifecycle.Transient },
+	options: RegistrationOptions<T> = { lifecycle: Lifecycle.Transient }
 ): (target: constructor<T>) => void {
 	return (target: constructor<T>) => {
 		Reflect.defineMetadata(REG_OPTS_METADATA_KEY, options, target);

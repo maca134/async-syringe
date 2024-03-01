@@ -4,7 +4,10 @@ import { injectable, StandardKernel, autoFactory, Factory } from '../../src';
 (async () => {
 	@injectable()
 	class Foo {
-		constructor(public bar: string, public foobar: number) {}
+		constructor(
+			public bar: string,
+			public foobar: number
+		) {}
 	}
 
 	@injectable()

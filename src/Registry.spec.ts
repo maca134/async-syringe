@@ -1,10 +1,6 @@
+import type { Registration, ValueRegistration } from './Kernel';
+import { Lifecycle, RegistrationType } from './Kernel';
 import { Registry } from './Registry';
-import {
-	Registration,
-	Lifecycle,
-	ValueRegistration,
-	RegistrationType,
-} from './Kernel';
 
 let registry: Registry;
 beforeEach(() => {

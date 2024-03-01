@@ -1,24 +1,26 @@
-import {
+import { AutoFactory } from './AutoFactory';
+import type {
 	constructor,
-	INJECTION_TOKEN_METADATA_KEY,
 	InjectionToken,
 	Kernel,
 	KernelModule,
-	Lifecycle,
 	ParamInjectionToken,
-	REG_OPTS_METADATA_KEY,
 	RegistrationOptions,
 	Registration,
 	ResolutionContext,
 	Node,
-	RegistrationType,
-	isClassRegistration,
 	InjectParam,
-	isFactoryRegistration,
 	ClassRegistration,
 } from './Kernel';
+import {
+	INJECTION_TOKEN_METADATA_KEY,
+	Lifecycle,
+	REG_OPTS_METADATA_KEY,
+	RegistrationType,
+	isClassRegistration,
+	isFactoryRegistration,
+} from './Kernel';
 import { Registry } from './Registry';
-import { AutoFactory } from './AutoFactory';
 
 export class TokenNotExist extends Error {}
 
@@ -34,7 +36,7 @@ export class StandardKernel implements Kernel {
 	registerClass<T>(
 		token: InjectionToken<T>,
 		ctorOrOptions?: constructor<T> | RegistrationOptions<T>,
-		options?: RegistrationOptions<T>,
+		options?: RegistrationOptions<T>
 	): void {
 		if (typeof ctorOrOptions === 'object') {
 			options = ctorOrOptions;
@@ -51,8 +53,7 @@ export class StandardKernel implements Kernel {
 			throw new Error(`no ctor provided for ${String(token)}`);
 		}
 
-		const paramTypes: constructor<any>[] =
-			Reflect.getMetadata('design:paramtypes', ctor) || [];
+		const paramTypes: constructor<any>[] = Reflect.getMetadata('design:paramtypes', ctor) || [];
 		let opts: RegistrationOptions<T>;
 		if (options) {
 			opts = options;
@@ -61,11 +62,10 @@ export class StandardKernel implements Kernel {
 				lifecycle: Lifecycle.Transient,
 			};
 		}
-		const paramTokens: Map<
-			number,
-			ParamInjectionToken<T>
-		> = Reflect.getMetadata(INJECTION_TOKEN_METADATA_KEY, ctor) ||
-		new Map();
+		const paramTokens: Map<number, ParamInjectionToken<T>> = Reflect.getMetadata(
+			INJECTION_TOKEN_METADATA_KEY,
+			ctor
+		) || new Map();
 		if (paramTypes.some((type) => !type)) {
 			throw new Error(`circular dependency around ${String(token)}`);
 		}
@@ -76,7 +76,7 @@ export class StandardKernel implements Kernel {
 					multi: false,
 					autoFactory: false,
 					optional: false,
-				},
+				}
 		);
 		// need to save value and not a scoped function
 		this._registry.set(token, {
@@ -94,7 +94,7 @@ export class StandardKernel implements Kernel {
 	registerFactory<T>(
 		token: InjectionToken<T>,
 		factory: (kernel: Kernel) => T | Promise<T>,
-		options?: Omit<RegistrationOptions<T>, 'initialize'>,
+		options?: Omit<RegistrationOptions<T>, 'initialize'>
 	): void {
 		this._registry.set<T>(token, {
 			type: RegistrationType.Factory,
@@ -118,7 +118,7 @@ export class StandardKernel implements Kernel {
 	resolve<T>(
 		token: InjectionToken<T>,
 		injectParams: InjectParam[] = [],
-		context: ResolutionContext = { scopedResolutions: new Map() },
+		context: ResolutionContext = { scopedResolutions: new Map() }
 	): Promise<T> {
 		if (!this._registry.has(token) && typeof token === 'function') {
 			this.registerClass(token);
@@ -138,14 +138,12 @@ export class StandardKernel implements Kernel {
 					value: registration.value,
 					opts: registration.opts,
 					params: registration.params.map((param, i) => {
-						const injectParam = injectParams.find(
-							(p) => p.index === i,
-						);
+						const injectParam = injectParams.find((p) => p.index === i);
 						if (!injectParam) {
 							return param;
 						}
 						const token = `${String(
-							registration.params[i].token,
+							registration.params[i].token
 						)}-${injectParam.index}`;
 						kernel.registerValue(token, injectParam.value);
 						return {
@@ -160,7 +158,7 @@ export class StandardKernel implements Kernel {
 			return kernel.resolveRegistration(
 				token,
 				kernel._registry.get(token) as Registration,
-				context,
+				context
 			);
 		}
 		return this.resolveRegistration(token, registration, context);
@@ -168,7 +166,7 @@ export class StandardKernel implements Kernel {
 
 	resolveAll<T>(
 		token: InjectionToken<T>,
-		context: ResolutionContext = { scopedResolutions: new Map() },
+		context: ResolutionContext = { scopedResolutions: new Map() }
 	): Promise<T[]> {
 		if (!this._registry.has(token) && this._parent) {
 			return this._parent.resolveAll(token);
@@ -176,9 +174,7 @@ export class StandardKernel implements Kernel {
 		return Promise.all(
 			this._registry
 				.getAll<T>(token)
-				.map((registration) =>
-					this.resolveRegistration(token, registration, context),
-				),
+				.map((registration) => this.resolveRegistration(token, registration, context))
 		);
 	}
 
@@ -207,10 +203,7 @@ export class StandardKernel implements Kernel {
 							try {
 								return resolve(param.token);
 							} catch (err) {
-								if (
-									err instanceof TokenNotExist &&
-									param.optional
-								) {
+								if (err instanceof TokenNotExist && param.optional) {
 									return undefined;
 								} else {
 									throw err;
@@ -220,8 +213,7 @@ export class StandardKernel implements Kernel {
 						.filter((i) => !!i) as Node[])
 				: [];
 			const lifecycle: Lifecycle =
-				isClassRegistration(registration) ||
-				isFactoryRegistration(registration)
+				isClassRegistration(registration) || isFactoryRegistration(registration)
 					? registration.opts.lifecycle || Lifecycle.Transient
 					: Lifecycle.Transient;
 			const node: Node = {
@@ -236,9 +228,7 @@ export class StandardKernel implements Kernel {
 	isRegistered<T>(token: InjectionToken<T>, recursive?: boolean): boolean {
 		return !!(
 			this._registry.has(token) ||
-			(recursive &&
-				this._parent &&
-				this._parent.isRegistered(token, true))
+			(recursive && this._parent && this._parent.isRegistered(token, true))
 		);
 	}
 
@@ -249,11 +239,10 @@ export class StandardKernel implements Kernel {
 	private resolveRegistration<T>(
 		token: InjectionToken<T>,
 		registration: Registration<T>,
-		context: ResolutionContext,
+		context: ResolutionContext
 	): Promise<T> {
 		const lifecycle: Lifecycle =
-			isClassRegistration(registration) ||
-			isFactoryRegistration(registration)
+			isClassRegistration(registration) || isFactoryRegistration(registration)
 				? registration.opts.lifecycle || Lifecycle.Transient
 				: Lifecycle.Transient;
 
@@ -278,10 +267,7 @@ export class StandardKernel implements Kernel {
 		}
 	}
 
-	private construct<T>(
-		registration: Registration<T>,
-		context: ResolutionContext,
-	): Promise<T> {
+	private construct<T>(registration: Registration<T>, context: ResolutionContext): Promise<T> {
 		switch (registration.type) {
 			case RegistrationType.Class:
 				return this.constructClass<T>(registration, context);
@@ -300,19 +286,17 @@ export class StandardKernel implements Kernel {
 
 	private async constructClass<T>(
 		registration: ClassRegistration<T>,
-		context: ResolutionContext,
+		context: ResolutionContext
 	) {
 		for (let i = 0; i < registration.params.length; i++) {
 			const param = registration.params[i];
 			if (
 				typeof param.token !== 'string' &&
 				typeof param.token !== 'symbol' &&
-				['Number', 'String', 'Array', 'Object', 'Function'].indexOf(
-					param.token.name,
-				) > -1
+				['Number', 'String', 'Array', 'Object', 'Function'].indexOf(param.token.name) > -1
 			) {
 				throw new Error(
-					`can not inject primitive type ${param.token.name}(${i}) - ${registration.value.name}`,
+					`can not inject primitive type ${param.token.name}(${i}) - ${registration.value.name}`
 				);
 			}
 		}
@@ -333,7 +317,7 @@ export class StandardKernel implements Kernel {
 						throw err;
 					}
 				}
-			}) as Promise<any>[],
+			}) as Promise<any>[]
 		);
 		const instance = new registration.value(...params);
 		if (registration.opts && registration.opts.initialize) {

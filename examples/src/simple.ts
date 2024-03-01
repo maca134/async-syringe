@@ -23,7 +23,7 @@ import { injectable, StandardKernel, inject, singleton } from '../../src';
 	const container = new StandardKernel();
 
 	container.registerValue('value', 'foobarValue');
-	container.registerFactory('factory', kernel => kernel.resolve('value'));
+	container.registerFactory('factory', (kernel) => kernel.resolve('value'));
 	container.registerToken('token', 'factory');
 
 	// A token can be resolved without being registered if it is a class constructor

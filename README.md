@@ -1,4 +1,5 @@
 # AsyncSyringe
+
 [![build status](https://img.shields.io/travis/maca134/async-syringe)](https://travis-ci.org/maca134/async-syringe)
 [![npm version](https://badge.fury.io/js/%40maca134%2Fasync-syringe.svg)](https://badge.fury.io/js/%40maca134%2Fasync-syringe)
 [![downloads](https://img.shields.io/npm/dm/@maca134/async-syringe)](https://www.npmjs.com/package/@maca134/async-syringe)
@@ -24,24 +25,24 @@ Modify your `tsconfig.json` to include the following settings
 
 ```json
 {
-  "compilerOptions": {
-    "experimentalDecorators": true,
-    "emitDecoratorMetadata": true
-  }
+	"compilerOptions": {
+		"experimentalDecorators": true,
+		"emitDecoratorMetadata": true
+	}
 }
 ```
 
 Add a polyfill for the Reflect API (examples below use reflect-metadata). You can use:
 
-- [reflect-metadata](https://www.npmjs.com/package/reflect-metadata)
-- [core-js (core-js/es7/reflect)](https://www.npmjs.com/package/core-js)
-- [reflection](https://www.npmjs.com/package/@abraham/reflection)
+-   [reflect-metadata](https://www.npmjs.com/package/reflect-metadata)
+-   [core-js (core-js/es7/reflect)](https://www.npmjs.com/package/core-js)
+-   [reflection](https://www.npmjs.com/package/@abraham/reflection)
 
 The Reflect polyfill import should only be added once, and before before DI is used:
 
 ```typescript
 // main.ts
-import "reflect-metadata";
+import 'reflect-metadata';
 
 // Your code here...
 ```
@@ -51,6 +52,7 @@ import "reflect-metadata";
 Working examples can be found in the root folder. Here is the code:
 
 # Simple
+
 ```typescript
 import 'reflect-metadata';
 import { injectable, StandardKernel } from '../..';
@@ -79,7 +81,7 @@ import { singleton } from '../../decorators/singleton';
 	const container = new StandardKernel();
 
 	container.registerValue('value', 'foobarValue');
-	container.registerFactory('factory', kernel => kernel.resolve('value'));
+	container.registerFactory('factory', (kernel) => kernel.resolve('value'));
 	container.registerToken('token', 'factory');
 
 	// A token can be resolved without being registered if it is a class constructor
@@ -97,6 +99,7 @@ import { singleton } from '../../decorators/singleton';
 ```
 
 ## Class Initializing
+
 ```typescript
 import 'reflect-metadata';
 import { injectable, StandardKernel } from '../..';
@@ -104,10 +107,10 @@ import { injectable, StandardKernel } from '../..';
 (async () => {
 	// to use initialize properly the decorator needs to be typed.
 	// the initialize function can be a promise
-	@injectable<Bar>({ initialize: instance => instance.init() })
+	@injectable<Bar>({ initialize: (instance) => instance.init() })
 	class Bar {
 		init(): Promise<any> {
-			return new Promise(resolve => setTimeout(() => resolve(), 4000));
+			return new Promise((resolve) => setTimeout(() => resolve(), 4000));
 		}
 	}
 
@@ -123,10 +126,10 @@ import { injectable, StandardKernel } from '../..';
 	Foo { bar: Bar {} }
 	*/
 })();
-
 ```
 
 ## Factories
+
 ```typescript
 import 'reflect-metadata';
 import { injectable, StandardKernel } from '../..';
@@ -136,7 +139,10 @@ import { Factory } from '../../Factory';
 (async () => {
 	@injectable()
 	class Foo {
-		constructor(public bar: string, public foobar: number) {}
+		constructor(
+			public bar: string,
+			public foobar: number
+		) {}
 	}
 
 	@injectable()
@@ -151,5 +157,4 @@ import { Factory } from '../../Factory';
 	Foo { bar: 'bar', foobar: 1337 }
 	*/
 })();
-
 ```
