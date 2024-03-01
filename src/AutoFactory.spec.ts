@@ -1,3 +1,4 @@
+import 'reflect-metadata';
 import { mocked } from 'jest-mock';
 import { AutoFactory } from './AutoFactory';
 import type { Kernel } from './Kernel';

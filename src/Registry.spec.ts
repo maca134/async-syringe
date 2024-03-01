@@ -1,3 +1,4 @@
+import 'reflect-metadata';
 import type { Registration, ValueRegistration } from './Kernel';
 import { Lifecycle, RegistrationType } from './Kernel';
 import { Registry } from './Registry';

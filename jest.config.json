@@ -16,6 +16,7 @@
 			"tsConfig": "tsconfig.test.json"
 		}
 	},
+	"testMatch": ["**/src/**/*.spec.ts"],
 	"moduleFileExtensions": ["ts", "tsx", "js"],
 	"testEnvironment": "node",
 	"transform": {

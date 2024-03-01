@@ -13,7 +13,8 @@
 		"experimentalDecorators": true,
 		"emitDecoratorMetadata": true,
 		"types": [
-			"reflect-metadata"
+			"reflect-metadata",
+			"jest"
 		]
 	},
 	"include": [
