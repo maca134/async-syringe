@@ -27,8 +27,5 @@ tsconfig.test.json
 # Example
 examples/node_modules/
 
-# Lock files
-package-lock.json
-
 # MacOS specific files
 .DS_Store
