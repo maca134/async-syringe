@@ -1,7 +1,7 @@
 {
 	"name": "@maca134/async-syringe",
 	"description": "Lightweight dependency injection container for TypeScript with async support",
-	"version": "3.0.0",
+	"version": "2.0.15",
 	"main": "dist/cjs/index.js",
 	"type": "module",
 	"module": "dist/index.js",
@@ -13,13 +13,12 @@
 		"build": "npm run clean && tsx ./build.ts && npm run copy:package.cjs.json",
 		"copy:package.cjs.json": "shx cp ./package.cjs.json ./dist/cjs/package.json && shx cp ./package.cjs.json ./dist/types/package.json",
 		"clean": "rimraf ./dist",
-		"patch": "npm run build && git add ./* & git commit -m \"patch\" & git push & npm version patch",
-		"postversion": "git push && npm publish",
 		"test": "npm run lint && jest --config jest.config.json",
 		"test:inspect": "npm run lint && node --inspect-brk ./node_modules/jest/bin/jest.js --runInBand --config jest.config.json",
 		"test:coverage": "jest --config jest.config.json --coverage",
 		"lint": "eslint --ext \".js,.jsx,.ts,.tsx\" \"./src\"",
 		"lint:fix": "eslint --fix --ext \".js,.jsx,.ts,.tsx\" \"./src\"",
+		"release": "np",
 		"prettier": "prettier --write \"**/*.{ts,tsx,md,cjs}\""
 	},
 	"exports": {
