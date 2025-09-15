@@ -1,37 +1,49 @@
 import 'reflect-metadata';
-import { mocked } from 'jest-mock';
 import { AutoFactory } from './AutoFactory';
 import type { Kernel } from './Kernel';
 import { StandardKernel } from './StandardKernel';
+import { injectable } from './decorators/injectable';
 
-jest.mock('./StandardKernel');
+let kernel: StandardKernel;
+beforeEach(() => {
+	kernel = new StandardKernel();
+});
 
-test('autofactory', async () => {
+test('autofactory create', async () => {
+	@injectable()
 	class Foo {
 		constructor(
 			public foo: string,
 			public bar: string
 		) {}
 	}
-	const foo = new Foo('foo', 'bar');
-	const kernel = mocked(new StandardKernel());
-	kernel.resolve.mockImplementation(() => Promise.resolve(foo) as any);
 
-	const fooFactory = new AutoFactory<typeof Foo>(kernel as Kernel, 'token');
+	const fooFactory = new AutoFactory<typeof Foo>(kernel as Kernel, Foo);
+	const foo = await fooFactory.create('foo', 'bar');
+	expect(foo).toBeInstanceOf(Foo);
+	expect(foo.foo).toBe('foo');
+	expect(foo.bar).toBe('bar');
+});
 
-	expect(await fooFactory.create('foo', 'bar')).toStrictEqual(foo);
-	expect(kernel.resolve.mock.calls).toHaveLength(1);
-	expect(kernel.resolve.mock.calls[0][0] === 'token').toBeTruthy();
-	expect(
-		kernel.resolve.mock.calls[0][1] && kernel.resolve.mock.calls[0][1][0].index === 0
-	).toBeTruthy();
-	expect(
-		kernel.resolve.mock.calls[0][1] && kernel.resolve.mock.calls[0][1][0].value === 'foo'
-	).toBeTruthy();
-	expect(
-		kernel.resolve.mock.calls[0][1] && kernel.resolve.mock.calls[0][1][1].index === 1
-	).toBeTruthy();
-	expect(
-		kernel.resolve.mock.calls[0][1] && kernel.resolve.mock.calls[0][1][1].value === 'bar'
-	).toBeTruthy();
+test('autofactory createWithArgs', async () => {
+	@injectable()
+	class Baz {}
+
+	@injectable()
+	class Foo {
+		constructor(
+			public foo: string,
+			public baz: Baz,
+			public bar: number
+		) {}
+	}
+	const kernel = new StandardKernel();
+
+	const fooFactory = new AutoFactory<typeof Foo>(kernel, Foo);
+
+	const foo = await fooFactory.createWithArgs({ 0: 'foo', 2: 123 });
+	expect(foo).toBeInstanceOf(Foo);
+	expect(foo.foo).toBe('foo');
+	expect(foo.bar).toBe(123);
+	expect(foo.baz).toBeInstanceOf(Baz);
 });
