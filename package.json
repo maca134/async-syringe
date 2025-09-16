@@ -18,6 +18,7 @@
 		"test:coverage": "jest --config jest.config.json --coverage",
 		"lint": "eslint --ext \".js,.jsx,.ts,.tsx\" \"./src\"",
 		"lint:fix": "eslint --fix --ext \".js,.jsx,.ts,.tsx\" \"./src\"",
+		"prerelease": "npm run build",
 		"release": "np",
 		"prettier": "prettier --write \"**/*.{ts,tsx,md,cjs}\""
 	},
