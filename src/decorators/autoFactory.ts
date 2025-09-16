@@ -7,7 +7,7 @@ import { store } from '../Reflection';
  * @param token injection token
  */
 
-export function autoFactory<T = any>(token?: InjectionToken<T>, optional = false) {
+export function autoFactory<T = any>(token: InjectionToken<T>, optional = false) {
 	return (target: object, key?: string | symbol, index?: number) => {
 		if (index !== undefined) {
 			store.get<T>(target).addConstructorToken(index, token, {

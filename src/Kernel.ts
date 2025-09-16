@@ -84,7 +84,7 @@ export interface FactoryRegistration<T = any> extends RegistrationBase {
 export interface ClassRegistration<T = any> extends RegistrationBase {
 	type: RegistrationType.Class;
 	params: ConstructorParamInjectionToken<T>[];
-	props: PropertyParamInjectionToken<T>[];
+	props: Record<string | symbol, PropertyParamInjectionToken<T>>;
 	opts: RegistrationOptions<T>;
 	value: constructor<T>;
 }

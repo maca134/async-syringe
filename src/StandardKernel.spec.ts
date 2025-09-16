@@ -406,6 +406,45 @@ test('inject properties', async () => {
 	expect(foo.bar).toBeInstanceOf(Bar);
 });
 
+test('nested inject properties', async () => {
+	@injectable()
+	class Bar {}
+
+	@injectable()
+	class Foo1 {
+		@inject()
+		public bar1!: Bar;
+	}
+
+	@injectable()
+	class Foo2 extends Foo1 {
+		@inject()
+		public bar2!: Bar;
+	}
+
+	@injectable()
+	class Foo3 extends Foo2 {
+		@inject()
+		public bar3!: Bar;
+	}
+
+	@injectable()
+	class Foo4 extends Foo3 {
+		@inject()
+		override bar3!: Foo1;
+	}
+
+	@injectable()
+	class Foo5 extends Foo4 {}
+
+	const foo = await kernel.resolve(Foo5);
+	expect(foo).toBeInstanceOf(Foo5);
+	expect(foo.bar1).toBeInstanceOf(Bar);
+	expect(foo.bar2).toBeInstanceOf(Bar);
+	expect(foo.bar3).toBeInstanceOf(Foo1);
+	expect(foo.bar3.bar1).toBeInstanceOf(Bar);
+});
+
 test('replacing classes', async () => {
 	class Foo {}
 	class Bar extends Foo {}

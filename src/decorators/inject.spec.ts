@@ -24,7 +24,7 @@ test('inject adds correct metadata to class', () => {
 	expect(param).toHaveProperty('token');
 	expect(param.token).toStrictEqual('foo');
 
-	const prop = metadata.props[0];
+	const prop = metadata.props.bar;
 	if (!prop) {
 		throw new Error('prop is null');
 	}

@@ -342,7 +342,7 @@ export class StandardKernel implements Kernel {
 		const instance = new registration.value(...params);
 
 		await Promise.all(
-			registration.props.map(async (prop) => {
+			Object.entries(registration.props).map(async ([_, prop]) => {
 				try {
 					if (prop.multi) {
 						(instance as any)[prop.key] = await this.resolveAll(prop.token, context);

@@ -10,7 +10,8 @@ import { formatToken } from './formatToken';
 type TokenOptions = { multi?: boolean; optional?: boolean; autoFactory?: boolean };
 
 type Metadata = RegistrationOptions<any> & {
-	props: PropertyParamInjectionToken<any>[];
+	parent?: constructor<any>;
+	props: Record<string | symbol, PropertyParamInjectionToken<any>>;
 	params: ConstructorParamInjectionToken<any>[];
 };
 
@@ -21,10 +22,13 @@ class ClassMetadata<T> {
 	options: RegistrationOptions<T>;
 	finalized = false;
 
-	constructor(readonly target: constructor<any>) {
+	constructor(
+		readonly store: MetadataStore,
+		readonly target: constructor<any>
+	) {
 		this.#metadata = {
 			lifecycle: Lifecycle.Transient,
-			props: [],
+			props: {},
 			params: [],
 		};
 		this.options = {
@@ -83,15 +87,36 @@ class ClassMetadata<T> {
 		if (paramTypes.some((type) => !type)) {
 			throw new Error(`circular dependency around ${formatToken(this.target)}`);
 		}
+		const parent = this.#getParent();
+		const parentProps = parent ? this.store.get(parent).metadata.props : undefined;
 		this.#metadata = {
 			...this.#metadata,
 			...this.options,
-			props: this.props,
+			parent,
+			props: {
+				...parentProps,
+				...this.props.reduce(
+					(prev, curr) => {
+						prev[curr.key] = curr;
+						return prev;
+					},
+					{} as Record<string | symbol, PropertyParamInjectionToken<any>>
+				),
+			},
 			params: paramTypes.map((type, index) => {
 				const existing = this.params.find((p) => p.index === index);
 				return existing || { type: 'constructor', index, token: type };
 			}),
 		};
+		this.finalized = true;
+	}
+
+	#getParent() {
+		const parent = Object.getPrototypeOf(this.target);
+		if (!parent || parent === Function.prototype) {
+			return;
+		}
+		return parent;
 	}
 }
 
@@ -101,7 +126,7 @@ export class MetadataStore {
 	get<T>(target: any): ClassMetadata<T> {
 		let classMeta = this.store.get(target);
 		if (!classMeta) {
-			classMeta = new ClassMetadata<T>(target);
+			classMeta = new ClassMetadata<T>(store, target);
 			this.store.set(target, classMeta);
 		}
 		return classMeta;
