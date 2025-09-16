@@ -6,12 +6,21 @@ import { store } from '../Reflection';
  *
  * @param token injection token
  */
-export function autoFactory<T = any>(token: InjectionToken<T>): ParameterDecorator {
-	return (target: any, _: string | symbol | undefined, parameterIndex: number) => {
-		store.get<T>(target).addConstructorToken(parameterIndex, token, {
-			multi: false,
-			autoFactory: true,
-			optional: false,
-		});
+
+export function autoFactory<T = any>(token?: InjectionToken<T>, optional = false) {
+	return (target: object, key?: string | symbol, index?: number) => {
+		if (index !== undefined) {
+			store.get<T>(target).addConstructorToken(index, token, {
+				multi: false,
+				autoFactory: true,
+				optional,
+			});
+		} else if (key) {
+			store.get<T>(target.constructor).addPropertyToken(key, token, {
+				multi: false,
+				autoFactory: true,
+				optional,
+			});
+		}
 	};
 }
