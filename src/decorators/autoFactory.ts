@@ -24,3 +24,11 @@ export function autoFactory<T = any>(token?: InjectionToken<T>, optional = false
 		}
 	};
 }
+
+/**
+ * Parameter decorator factory that allows for interface information to be stored in the constructor's metadata
+ *
+ * @param token injection token
+ */
+
+export const factory = autoFactory;
