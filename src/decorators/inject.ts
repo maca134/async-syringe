@@ -1,23 +1,26 @@
-import type { InjectionToken, ParamInjectionToken } from '../Kernel';
-import { INJECTION_TOKEN_METADATA_KEY } from '../Kernel';
+import type { InjectionToken } from '../Kernel';
+import { store } from '../Reflection';
 
 /**
  * Parameter decorator factory that allows for interface information to be stored in the constructor's metadata
  *
  * @param token injection token
  */
-export function inject<T = any>(token: InjectionToken<T>, optional = false): ParameterDecorator {
-	return (target: any, _: string | symbol | undefined, parameterIndex: number) => {
-		const tokens: Map<number, ParamInjectionToken<T>> = Reflect.getOwnMetadata(
-			INJECTION_TOKEN_METADATA_KEY,
-			target
-		) || new Map<number, ParamInjectionToken<T>>();
-		tokens.set(parameterIndex, {
-			token,
-			multi: false,
-			autoFactory: false,
-			optional,
-		});
-		Reflect.defineMetadata(INJECTION_TOKEN_METADATA_KEY, tokens, target);
+
+export function inject<T = any>(token?: InjectionToken<T>, optional = false) {
+	return (target: object, key?: string | symbol, index?: number) => {
+		if (index !== undefined) {
+			store.get<T>(target).addConstructorToken(index, token, {
+				multi: false,
+				autoFactory: false,
+				optional,
+			});
+		} else if (key) {
+			store.get<T>(target.constructor).addPropertyToken(key, token, {
+				multi: false,
+				autoFactory: false,
+				optional,
+			});
+		}
 	};
 }

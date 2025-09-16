@@ -1,5 +1,5 @@
-import type { ConstructorArguments, Factory } from './Factory';
-import type { constructor, InjectionToken, Kernel } from './Kernel';
+import type { Factory } from './Factory';
+import type { constructor, ConstructorArgumentsObject, InjectionToken, Kernel } from './Kernel';
 
 export class AutoFactory<T extends constructor<any>> implements Factory<T> {
 	constructor(
@@ -26,11 +26,15 @@ export class AutoFactory<T extends constructor<any>> implements Factory<T> {
 	 *               The keys represent the argument indices, and the values are the corresponding argument values.
 	 * 				For example, to pass 'foo' as the first argument and 'bar' as the third argument, you would call:
 	 * 				```typescript
-	 * 				createWithArgs({ 0: 'foo', 2: 'bar' });
+	 * 				class Baz {}
+	 * 				class Foo { constructor(foo: string, baz: Baz, bar: string ) {} }
+	 *
+	 * 				// Baz is automatically resolved and injected
+	 * 				fooFactory.createWithArgs({ 0: 'foo', 2: 'bar' });
 	 * 				```
 	 * @returns A promise that resolves to an instance of type `T`.
 	 */
-	createWithArgs(args: ConstructorArguments<T>): Promise<InstanceType<T>> {
+	createWithArgs(args: ConstructorArgumentsObject<T>): Promise<InstanceType<T>> {
 		return this._kernel.resolve<InstanceType<T>>(
 			this._token,
 			Object.entries(args).map(([key, value]) => ({ index: Number(key), value }))

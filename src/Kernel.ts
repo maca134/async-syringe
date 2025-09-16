@@ -1,6 +1,3 @@
-export const INJECTION_TOKEN_METADATA_KEY = 'ioc-tokens';
-export const REG_OPTS_METADATA_KEY = 'ioc-opts';
-
 export enum Lifecycle {
 	/**
 	 * Created new instance every time one is resolved
@@ -38,12 +35,25 @@ export type ResolutionContext = {
 };
 export type constructor<T> = { new (...args: any[]): T };
 export type InjectionToken<T = any> = constructor<T> | string | symbol;
-export type ParamInjectionToken<T> = {
+
+interface ParamInjectionToken<T> {
+	type: 'constructor' | 'property';
 	token: InjectionToken<T>;
-	multi: boolean;
-	optional: boolean;
-	autoFactory: boolean;
-};
+	multi?: boolean;
+	optional?: boolean;
+	autoFactory?: boolean;
+}
+
+export interface ConstructorParamInjectionToken<T> extends ParamInjectionToken<T> {
+	type: 'constructor';
+	index: number;
+}
+
+export interface PropertyParamInjectionToken<T> extends ParamInjectionToken<T> {
+	type: 'property';
+	key: string | symbol;
+}
+
 export enum RegistrationType {
 	Class = 1,
 	Factory = 2,
@@ -73,7 +83,8 @@ export interface FactoryRegistration<T = any> extends RegistrationBase {
 
 export interface ClassRegistration<T = any> extends RegistrationBase {
 	type: RegistrationType.Class;
-	params: ParamInjectionToken<T>[];
+	params: ConstructorParamInjectionToken<T>[];
+	props: PropertyParamInjectionToken<T>[];
 	opts: RegistrationOptions<T>;
 	value: constructor<T>;
 }
@@ -100,7 +111,18 @@ export function isClassRegistration<T>(reg: Registration<T>): reg is ClassRegist
 	return reg.type === RegistrationType.Class;
 }
 
-export type InjectParam = { index: number; value: any };
+//export type InjectParam = { index: number; value: any };
+export type ConstructorArgumentsObject<
+	T extends constructor<any>,
+	U extends readonly unknown[] = ConstructorParameters<T>,
+> = {
+	[K in keyof U]: { [P in K]: U[K] };
+}[number];
+
+export type ConstructorArgumentsArray = {
+	index: number;
+	value: any;
+}[];
 
 export type Node = { name: string; lifecycle: string; children: Node[] };
 
@@ -187,7 +209,7 @@ export interface Kernel {
 	 * @param token injection token
 	 * @return An instance or promise of T
 	 */
-	resolve<T>(token: InjectionToken<T>, params?: InjectParam[]): Promise<T>;
+	resolve<T>(token: InjectionToken<T>, params?: ConstructorArgumentsArray): Promise<T>;
 
 	/**
 	 * Resolve all registrations for the given injection token.

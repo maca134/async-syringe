@@ -11,6 +11,10 @@ import { injectable, StandardKernel, inject, singleton } from '../../src';
 	// injectable decorator is only needed when there are constructor parameters
 	@injectable()
 	class Bar {
+		// properties can also be injected
+		@inject()
+		foo3!: Foo2;
+
 		constructor(
 			public foo1: Foo1,
 			public foo2: Foo2,

@@ -1,12 +1,12 @@
 import 'reflect-metadata';
-import type { RegistrationOptions } from '../Kernel';
-import { REG_OPTS_METADATA_KEY, Lifecycle } from '../Kernel';
+import { Lifecycle } from '../Kernel';
+import { store } from '../Reflection';
 import { singleton } from './singleton';
 
 test('singleton adds correct metadata to class', () => {
 	@singleton()
 	class Foo {}
-	const metadata = Reflect.getOwnMetadata(REG_OPTS_METADATA_KEY, Foo) as RegistrationOptions<Foo>;
+	const metadata = store.getMetadata(Foo);
 
 	if (!metadata) {
 		throw new Error('metadata is null');

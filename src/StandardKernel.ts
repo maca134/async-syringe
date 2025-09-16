@@ -4,33 +4,52 @@ import type {
 	InjectionToken,
 	Kernel,
 	KernelModule,
-	ParamInjectionToken,
 	RegistrationOptions,
 	Registration,
 	ResolutionContext,
 	Node,
-	InjectParam,
 	ClassRegistration,
+	ConstructorArgumentsArray,
 } from './Kernel';
-import {
-	INJECTION_TOKEN_METADATA_KEY,
-	Lifecycle,
-	REG_OPTS_METADATA_KEY,
-	RegistrationType,
-	isClassRegistration,
-	isFactoryRegistration,
-} from './Kernel';
+import { Lifecycle, RegistrationType, isClassRegistration, isFactoryRegistration } from './Kernel';
+import { type MetadataStore, store } from './Reflection';
 import { Registry } from './Registry';
+import { formatToken } from './formatToken';
 
 export class TokenNotExist extends Error {}
 
-export class StandardKernel implements Kernel {
-	private _singletons = new Map<InjectionToken<any>, Promise<any>>();
-	private _registry = new Registry();
+export type StandardKernelOptions = {
+	log: boolean | ((message: string) => void);
+};
 
-	constructor(private readonly _parent?: Kernel) {
+export class StandardKernel implements Kernel {
+	private readonly _singletons = new Map<InjectionToken<any>, Promise<any>>();
+	private readonly _registry = new Registry();
+	private readonly _options: StandardKernelOptions;
+	private readonly _logger: (message: string) => void;
+
+	constructor(
+		options?: Partial<StandardKernelOptions>,
+		private readonly _parent?: Kernel
+	) {
+		this._logger = (message: string) => {
+			if (!options?.log) {
+				return;
+			}
+			const logger = typeof options?.log === 'function' ? options?.log : console.log;
+			logger(`[StandardKernel] ${message}`);
+		};
 		this.registerValue(StandardKernel, this);
 		this.registerValue('Kernel', this);
+		this._options = {
+			log: false,
+			...options,
+		};
+		this._logger('Kernel created');
+	}
+
+	get metadata(): MetadataStore {
+		return store;
 	}
 
 	registerClass<T>(
@@ -38,6 +57,7 @@ export class StandardKernel implements Kernel {
 		ctorOrOptions?: constructor<T> | RegistrationOptions<T>,
 		options?: RegistrationOptions<T>
 	): void {
+		this._logger(`registerClass: ${formatToken(token)}`);
 		if (typeof ctorOrOptions === 'object') {
 			options = ctorOrOptions;
 		}
@@ -50,44 +70,27 @@ export class StandardKernel implements Kernel {
 		) {
 			ctor = token;
 		} else {
-			throw new Error(`no ctor provided for ${String(token)}`);
+			throw new Error(`no ctor provided for ${formatToken(token)}`);
 		}
 
-		const paramTypes: constructor<any>[] = Reflect.getMetadata('design:paramtypes', ctor) || [];
-		let opts: RegistrationOptions<T>;
-		if (options) {
-			opts = options;
-		} else {
-			opts = Reflect.getMetadata(REG_OPTS_METADATA_KEY, ctor) || {
-				lifecycle: Lifecycle.Transient,
-			};
-		}
-		const paramTokens: Map<number, ParamInjectionToken<T>> = Reflect.getMetadata(
-			INJECTION_TOKEN_METADATA_KEY,
-			ctor
-		) || new Map();
-		if (paramTypes.some((type) => !type)) {
-			throw new Error(`circular dependency around ${String(token)}`);
-		}
-		const params = paramTypes.map(
-			(type, i) =>
-				paramTokens.get(i) || {
-					token: type,
-					multi: false,
-					autoFactory: false,
-					optional: false,
-				}
-		);
+		const { metadata } = store.get(ctor);
+		const opts = options || {
+			initialize: metadata.initialize,
+			lifecycle: metadata.lifecycle || Lifecycle.Transient,
+		};
+
 		// need to save value and not a scoped function
 		this._registry.set(token, {
 			type: RegistrationType.Class,
 			opts,
-			params,
+			params: metadata.params,
+			props: metadata.props,
 			value: ctor,
 		});
 	}
 
 	registerValue<T>(token: InjectionToken<T>, value: T): void {
+		this._logger(`registerValue: ${formatToken(token)}`);
 		this._registry.set<T>(token, { type: RegistrationType.Value, value });
 	}
 
@@ -96,6 +99,7 @@ export class StandardKernel implements Kernel {
 		factory: (kernel: Kernel) => T | Promise<T>,
 		options?: Omit<RegistrationOptions<T>, 'initialize'>
 	): void {
+		this._logger(`registerFactory: ${formatToken(token)}`);
 		this._registry.set<T>(token, {
 			type: RegistrationType.Factory,
 			value: factory,
@@ -104,6 +108,7 @@ export class StandardKernel implements Kernel {
 	}
 
 	registerToken<T>(token: InjectionToken<T>, to: InjectionToken<T>): void {
+		this._logger(`registerToken: ${formatToken(token)} -> ${String(to)}`);
 		this._registry.set<T>(token, {
 			type: RegistrationType.Token,
 			value: to,
@@ -111,15 +116,18 @@ export class StandardKernel implements Kernel {
 	}
 
 	unregister<T>(token: InjectionToken<T>): void {
+		this._logger(`unregister: ${formatToken(token)}`);
 		this._registry.setAll(token, []);
 		this._singletons.delete(token);
 	}
 
+	// TODO: support ConstructorArgumentsObject
 	resolve<T>(
 		token: InjectionToken<T>,
-		injectParams: InjectParam[] = [],
+		inject: ConstructorArgumentsArray = [],
 		context: ResolutionContext = { scopedResolutions: new Map() }
 	): Promise<T> {
+		this._logger(`resolve: ${formatToken(token)}`);
 		if (!this._registry.has(token) && typeof token === 'function') {
 			this.registerClass(token);
 		}
@@ -128,31 +136,36 @@ export class StandardKernel implements Kernel {
 		}
 		const registration = this._registry.get<T>(token);
 		if (!registration) {
-			throw new TokenNotExist(`${String(token)} token not found`);
+			throw new TokenNotExist(`${formatToken(token)} token not found`);
 		}
+		const injectParams = !Array.isArray(inject)
+			? Object.entries(inject).map(([key, value]) => ({ index: Number(key), value }))
+			: inject;
+
 		if (injectParams.length > 0 && isClassRegistration(registration)) {
 			const kernel = this.getChildKernel() as StandardKernel;
+			const params = registration.params.map((param, i) => {
+				const injectParam = injectParams.find((p) => p.index === i);
+				if (!injectParam) {
+					return param;
+				}
+				const token = Symbol.for(
+					`${String(registration.params[i].token)}-${injectParam.index}`
+				);
+				kernel.registerValue(token, injectParam.value);
+				return {
+					type: param.type,
+					token,
+					index: param.index,
+				};
+			});
 			kernel._registry.setAll(token, [
 				{
 					type: RegistrationType.Class,
 					value: registration.value,
 					opts: registration.opts,
-					params: registration.params.map((param, i) => {
-						const injectParam = injectParams.find((p) => p.index === i);
-						if (!injectParam) {
-							return param;
-						}
-						const token = `${String(
-							registration.params[i].token
-						)}-${injectParam.index}`;
-						kernel.registerValue(token, injectParam.value);
-						return {
-							token,
-							multi: param.multi,
-							autoFactory: param.autoFactory,
-							optional: param.optional,
-						};
-					}),
+					params,
+					props: registration.props,
 				},
 			]);
 			return kernel.resolveRegistration(
@@ -168,6 +181,7 @@ export class StandardKernel implements Kernel {
 		token: InjectionToken<T>,
 		context: ResolutionContext = { scopedResolutions: new Map() }
 	): Promise<T[]> {
+		this._logger(`resolveAll: ${formatToken(token)}`);
 		if (!this._registry.has(token) && this._parent) {
 			return this._parent.resolveAll(token);
 		}
@@ -179,22 +193,23 @@ export class StandardKernel implements Kernel {
 	}
 
 	load<T extends KernelModule>(module: T): void {
+		this._logger(`load: ${module.constructor.name}`);
 		module.load(this);
 	}
 
-	dependencyTree<T>(token: InjectionToken<T>): Node {
-		const kernel = new StandardKernel();
+	dependencyTree<T>(token: InjectionToken<T>, options?: StandardKernelOptions): Node {
+		this._logger(`dependencyTree: ${formatToken(token)}`);
+		const kernel = new StandardKernel(options);
 		for (const [token, reg] of this._registry.entries()) {
 			kernel._registry.setAll(token, reg);
 		}
-
 		return (function resolve(token: InjectionToken) {
 			if (!kernel._registry.has(token) && typeof token === 'function') {
 				kernel.registerClass(token);
 			}
 			const registration = kernel._registry.get<T>(token);
 			if (!registration) {
-				throw new TokenNotExist(`${String(token)} token not found`);
+				throw new TokenNotExist(`${formatToken(token)} token not found`);
 			}
 
 			const children = isClassRegistration(registration)
@@ -226,6 +241,7 @@ export class StandardKernel implements Kernel {
 	}
 
 	isRegistered<T>(token: InjectionToken<T>, recursive?: boolean): boolean {
+		this._logger(`isRegistered: ${formatToken(token)}`);
 		return !!(
 			this._registry.has(token) ||
 			(recursive && this._parent && this._parent.isRegistered(token, true))
@@ -233,7 +249,8 @@ export class StandardKernel implements Kernel {
 	}
 
 	getChildKernel(): Kernel {
-		return new StandardKernel(this);
+		this._logger('getChildKernel');
+		return new StandardKernel(this._options, this);
 	}
 
 	private resolveRegistration<T>(
@@ -241,6 +258,7 @@ export class StandardKernel implements Kernel {
 		registration: Registration<T>,
 		context: ResolutionContext
 	): Promise<T> {
+		this._logger(`resolveRegistration: ${formatToken(token)}`);
 		const lifecycle: Lifecycle =
 			isClassRegistration(registration) || isFactoryRegistration(registration)
 				? registration.opts.lifecycle || Lifecycle.Transient
@@ -268,6 +286,7 @@ export class StandardKernel implements Kernel {
 	}
 
 	private construct<T>(registration: Registration<T>, context: ResolutionContext): Promise<T> {
+		this._logger(`construct: ${registration.type}`);
 		switch (registration.type) {
 			case RegistrationType.Class:
 				return this.constructClass<T>(registration, context);
@@ -288,6 +307,7 @@ export class StandardKernel implements Kernel {
 		registration: ClassRegistration<T>,
 		context: ResolutionContext
 	) {
+		this._logger(`constructClass: ${registration.value.name}`);
 		for (let i = 0; i < registration.params.length; i++) {
 			const param = registration.params[i];
 			if (
@@ -320,6 +340,27 @@ export class StandardKernel implements Kernel {
 			}) as Promise<any>[]
 		);
 		const instance = new registration.value(...params);
+
+		await Promise.all(
+			registration.props.map(async (prop) => {
+				try {
+					if (prop.multi) {
+						(instance as any)[prop.key] = await this.resolveAll(prop.token, context);
+					} else if (prop.autoFactory) {
+						(instance as any)[prop.key] = new AutoFactory(this, prop.token);
+					} else {
+						(instance as any)[prop.key] = await this.resolve(prop.token, [], context);
+					}
+				} catch (err) {
+					if (err instanceof TokenNotExist && prop.optional) {
+						(instance as any)[prop.key] = undefined;
+					} else {
+						throw err;
+					}
+				}
+			})
+		);
+
 		if (registration.opts && registration.opts.initialize) {
 			await registration.opts.initialize(instance);
 		}
