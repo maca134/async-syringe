@@ -110,7 +110,6 @@ export function isFactoryRegistration<T>(reg: Registration<T>): reg is FactoryRe
 export function isClassRegistration<T>(reg: Registration<T>): reg is ClassRegistration<T> {
 	return reg.type === RegistrationType.Class;
 }
-
 //export type InjectParam = { index: number; value: any };
 export type ConstructorArgumentsObject<
 	T extends constructor<any>,
@@ -125,6 +124,14 @@ export type ConstructorArgumentsArray = {
 }[];
 
 export type Node = { name: string; lifecycle: string; children: Node[] };
+
+interface Disposable {
+	dispose(): void | Promise<void>;
+}
+
+export function isDisposable(obj: any): obj is Disposable {
+	return obj && typeof obj.dispose === 'function';
+}
 
 export interface KernelModule {
 	load(kernal: Kernel): void;
@@ -243,4 +250,9 @@ export interface Kernel {
 	 * @param recursive check parent kernels
 	 */
 	isRegistered<T>(token: InjectionToken<T>, recursive?: boolean): boolean;
+
+	/**
+	 * Dispose of all singletons
+	 */
+	dispose(): Promise<void>;
 }

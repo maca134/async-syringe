@@ -11,7 +11,13 @@ import type {
 	ClassRegistration,
 	ConstructorArgumentsArray,
 } from './Kernel';
-import { Lifecycle, RegistrationType, isClassRegistration, isFactoryRegistration } from './Kernel';
+import {
+	Lifecycle,
+	RegistrationType,
+	isClassRegistration,
+	isDisposable,
+	isFactoryRegistration,
+} from './Kernel';
 import { type MetadataStore, store } from './Reflection';
 import { Registry } from './Registry';
 import { formatToken } from './formatToken';
@@ -23,10 +29,10 @@ export type StandardKernelOptions = {
 };
 
 export class StandardKernel implements Kernel {
-	private readonly _singletons = new Map<InjectionToken<any>, Promise<any>>();
-	private readonly _registry = new Registry();
-	private readonly _options: StandardKernelOptions;
-	private readonly _logger: (message: string) => void;
+	readonly _singletons = new Map<InjectionToken<any>, Promise<any>>();
+	readonly _registry = new Registry();
+	readonly _options: StandardKernelOptions;
+	readonly _logger: (message: string) => void;
 
 	constructor(
 		options?: Partial<StandardKernelOptions>,
@@ -197,6 +203,7 @@ export class StandardKernel implements Kernel {
 		module.load(this);
 	}
 
+	// TODO: add properties to Node
 	dependencyTree<T>(token: InjectionToken<T>, options?: StandardKernelOptions): Node {
 		this._logger(`dependencyTree: ${formatToken(token)}`);
 		const kernel = new StandardKernel(options);
@@ -251,6 +258,23 @@ export class StandardKernel implements Kernel {
 	getChildKernel(): Kernel {
 		this._logger('getChildKernel');
 		return new StandardKernel(this._options, this);
+	}
+
+	async dispose(): Promise<void> {
+		this._logger('dispose');
+		if (this._parent) {
+			this._parent.dispose();
+		}
+		const singletons = Array.from(this._singletons.values());
+		await Promise.all(
+			singletons.map(async (p) => {
+				const instance = await p;
+				if (isDisposable(instance)) {
+					await instance.dispose();
+				}
+			})
+		);
+		this._singletons.clear();
 	}
 
 	private resolveRegistration<T>(

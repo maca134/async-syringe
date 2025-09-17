@@ -476,7 +476,10 @@ test('singleton child kernel', async () => {
 
 	@injectable()
 	class Bar {
-		constructor(public id: number, public foo: Foo) {}
+		constructor(
+			public id: number,
+			public foo: Foo
+		) {}
 	}
 
 	const bar1 = await kernel.resolve(Bar, [{ index: 0, value: 1 }]);
