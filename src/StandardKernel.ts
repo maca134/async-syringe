@@ -173,13 +173,13 @@ export class StandardKernel implements Kernel {
 					props: registration.props,
 				},
 			]);
-			return kernel.resolveRegistration(
+			return kernel.#resolveRegistration(
 				token,
 				kernel.#registry.get(token) as Registration,
 				context
 			);
 		}
-		return this.resolveRegistration(token, registration, context);
+		return this.#resolveRegistration(token, registration, context);
 	}
 
 	resolveAll<T>(
@@ -193,7 +193,7 @@ export class StandardKernel implements Kernel {
 		return Promise.all(
 			this.#registry
 				.getAll<T>(token)
-				.map((registration) => this.resolveRegistration(token, registration, context))
+				.map((registration) => this.#resolveRegistration(token, registration, context))
 		);
 	}
 
@@ -276,7 +276,7 @@ export class StandardKernel implements Kernel {
 		this.#singletons.clear();
 	}
 
-	private resolveRegistration<T>(
+	#resolveRegistration<T>(
 		token: InjectionToken<T>,
 		registration: Registration<T>,
 		context: ResolutionContext
@@ -291,16 +291,16 @@ export class StandardKernel implements Kernel {
 			if (this.#singletons.has(token)) {
 				return this.#singletons.get(token) as Promise<T>;
 			}
-			const instance = this.construct(registration, context);
+			const instance = this.#construct(registration, context);
 			this.#singletons.set(token, instance);
 			return instance;
 		} else if (lifecycle == Lifecycle.Transient) {
-			return this.construct(registration, context);
+			return this.#construct(registration, context);
 		} else if (lifecycle == Lifecycle.Scoped) {
 			if (context.scopedResolutions.has(token)) {
 				return context.scopedResolutions.get(token) as Promise<T>;
 			}
-			const instance = this.construct(registration, context);
+			const instance = this.#construct(registration, context);
 			context.scopedResolutions.set(token, instance);
 			return instance;
 		} else {
@@ -308,11 +308,11 @@ export class StandardKernel implements Kernel {
 		}
 	}
 
-	private construct<T>(registration: Registration<T>, context: ResolutionContext): Promise<T> {
+	#construct<T>(registration: Registration<T>, context: ResolutionContext): Promise<T> {
 		this.#logger(`construct: ${registration.type}`);
 		switch (registration.type) {
 			case RegistrationType.Class:
-				return this.constructClass<T>(registration, context);
+				return this.#constructClass<T>(registration, context);
 
 			case RegistrationType.Factory:
 				return Promise.resolve(registration.value(this));
@@ -326,10 +326,7 @@ export class StandardKernel implements Kernel {
 		throw new Error('bad registration type');
 	}
 
-	private async constructClass<T>(
-		registration: ClassRegistration<T>,
-		context: ResolutionContext
-	) {
+	async #constructClass<T>(registration: ClassRegistration<T>, context: ResolutionContext) {
 		this.#logger(`constructClass: ${registration.value.name}`);
 		for (let i = 0; i < registration.params.length; i++) {
 			const param = registration.params[i];
