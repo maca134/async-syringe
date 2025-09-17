@@ -29,16 +29,15 @@ export type StandardKernelOptions = {
 };
 
 export class StandardKernel implements Kernel {
-	readonly _singletons = new Map<InjectionToken<any>, Promise<any>>();
-	readonly _registry = new Registry();
-	readonly _options: StandardKernelOptions;
-	readonly _logger: (message: string) => void;
+	readonly #parent?: Kernel;
+	readonly #singletons = new Map<InjectionToken<any>, Promise<any>>();
+	readonly #registry = new Registry();
+	readonly #options: StandardKernelOptions;
+	readonly #logger: (message: string) => void;
 
-	constructor(
-		options?: Partial<StandardKernelOptions>,
-		private readonly _parent?: Kernel
-	) {
-		this._logger = (message: string) => {
+	constructor(options?: Partial<StandardKernelOptions>, parent?: Kernel) {
+		this.#parent = parent;
+		this.#logger = (message: string) => {
 			if (!options?.log) {
 				return;
 			}
@@ -47,11 +46,11 @@ export class StandardKernel implements Kernel {
 		};
 		this.registerValue(StandardKernel, this);
 		this.registerValue('Kernel', this);
-		this._options = {
+		this.#options = {
 			log: false,
 			...options,
 		};
-		this._logger('Kernel created');
+		this.#logger('Kernel created');
 	}
 
 	get metadata(): MetadataStore {
@@ -63,7 +62,7 @@ export class StandardKernel implements Kernel {
 		ctorOrOptions?: constructor<T> | RegistrationOptions<T>,
 		options?: RegistrationOptions<T>
 	): void {
-		this._logger(`registerClass: ${formatToken(token)}`);
+		this.#logger(`registerClass: ${formatToken(token)}`);
 		if (typeof ctorOrOptions === 'object') {
 			options = ctorOrOptions;
 		}
@@ -86,7 +85,7 @@ export class StandardKernel implements Kernel {
 		};
 
 		// need to save value and not a scoped function
-		this._registry.set(token, {
+		this.#registry.set(token, {
 			type: RegistrationType.Class,
 			opts,
 			params: metadata.params,
@@ -96,8 +95,8 @@ export class StandardKernel implements Kernel {
 	}
 
 	registerValue<T>(token: InjectionToken<T>, value: T): void {
-		this._logger(`registerValue: ${formatToken(token)}`);
-		this._registry.set<T>(token, { type: RegistrationType.Value, value });
+		this.#logger(`registerValue: ${formatToken(token)}`);
+		this.#registry.set<T>(token, { type: RegistrationType.Value, value });
 	}
 
 	registerFactory<T>(
@@ -105,8 +104,8 @@ export class StandardKernel implements Kernel {
 		factory: (kernel: Kernel) => T | Promise<T>,
 		options?: Omit<RegistrationOptions<T>, 'initialize'>
 	): void {
-		this._logger(`registerFactory: ${formatToken(token)}`);
-		this._registry.set<T>(token, {
+		this.#logger(`registerFactory: ${formatToken(token)}`);
+		this.#registry.set<T>(token, {
 			type: RegistrationType.Factory,
 			value: factory,
 			opts: options || {},
@@ -114,17 +113,17 @@ export class StandardKernel implements Kernel {
 	}
 
 	registerToken<T>(token: InjectionToken<T>, to: InjectionToken<T>): void {
-		this._logger(`registerToken: ${formatToken(token)} -> ${String(to)}`);
-		this._registry.set<T>(token, {
+		this.#logger(`registerToken: ${formatToken(token)} -> ${String(to)}`);
+		this.#registry.set<T>(token, {
 			type: RegistrationType.Token,
 			value: to,
 		});
 	}
 
 	unregister<T>(token: InjectionToken<T>): void {
-		this._logger(`unregister: ${formatToken(token)}`);
-		this._registry.setAll(token, []);
-		this._singletons.delete(token);
+		this.#logger(`unregister: ${formatToken(token)}`);
+		this.#registry.setAll(token, []);
+		this.#singletons.delete(token);
 	}
 
 	// TODO: support ConstructorArgumentsObject
@@ -133,14 +132,14 @@ export class StandardKernel implements Kernel {
 		inject: ConstructorArgumentsArray = [],
 		context: ResolutionContext = { scopedResolutions: new Map() }
 	): Promise<T> {
-		this._logger(`resolve: ${formatToken(token)}`);
-		if (!this._registry.has(token) && this._parent) {
-			return this._parent.resolve(token);
+		this.#logger(`resolve: ${formatToken(token)}`);
+		if (!this.#registry.has(token) && this.#parent) {
+			return this.#parent.resolve(token);
 		}
-		if (!this._registry.has(token) && typeof token === 'function') {
+		if (!this.#registry.has(token) && typeof token === 'function') {
 			this.registerClass(token);
 		}
-		const registration = this._registry.get<T>(token);
+		const registration = this.#registry.get<T>(token);
 		if (!registration) {
 			throw new TokenNotExist(`${formatToken(token)} token not found`);
 		}
@@ -165,7 +164,7 @@ export class StandardKernel implements Kernel {
 					index: param.index,
 				};
 			});
-			kernel._registry.setAll(token, [
+			kernel.#registry.setAll(token, [
 				{
 					type: RegistrationType.Class,
 					value: registration.value,
@@ -176,7 +175,7 @@ export class StandardKernel implements Kernel {
 			]);
 			return kernel.resolveRegistration(
 				token,
-				kernel._registry.get(token) as Registration,
+				kernel.#registry.get(token) as Registration,
 				context
 			);
 		}
@@ -187,34 +186,34 @@ export class StandardKernel implements Kernel {
 		token: InjectionToken<T>,
 		context: ResolutionContext = { scopedResolutions: new Map() }
 	): Promise<T[]> {
-		this._logger(`resolveAll: ${formatToken(token)}`);
-		if (!this._registry.has(token) && this._parent) {
-			return this._parent.resolveAll(token);
+		this.#logger(`resolveAll: ${formatToken(token)}`);
+		if (!this.#registry.has(token) && this.#parent) {
+			return this.#parent.resolveAll(token);
 		}
 		return Promise.all(
-			this._registry
+			this.#registry
 				.getAll<T>(token)
 				.map((registration) => this.resolveRegistration(token, registration, context))
 		);
 	}
 
 	load<T extends KernelModule>(module: T): void {
-		this._logger(`load: ${module.constructor.name}`);
+		this.#logger(`load: ${module.constructor.name}`);
 		module.load(this);
 	}
 
 	// TODO: add properties to Node
 	dependencyTree<T>(token: InjectionToken<T>, options?: StandardKernelOptions): Node {
-		this._logger(`dependencyTree: ${formatToken(token)}`);
+		this.#logger(`dependencyTree: ${formatToken(token)}`);
 		const kernel = new StandardKernel(options);
-		for (const [token, reg] of this._registry.entries()) {
-			kernel._registry.setAll(token, reg);
+		for (const [token, reg] of this.#registry.entries()) {
+			kernel.#registry.setAll(token, reg);
 		}
 		return (function resolve(token: InjectionToken) {
-			if (!kernel._registry.has(token) && typeof token === 'function') {
+			if (!kernel.#registry.has(token) && typeof token === 'function') {
 				kernel.registerClass(token);
 			}
-			const registration = kernel._registry.get<T>(token);
+			const registration = kernel.#registry.get<T>(token);
 			if (!registration) {
 				throw new TokenNotExist(`${formatToken(token)} token not found`);
 			}
@@ -248,24 +247,24 @@ export class StandardKernel implements Kernel {
 	}
 
 	isRegistered<T>(token: InjectionToken<T>, recursive?: boolean): boolean {
-		this._logger(`isRegistered: ${formatToken(token)}`);
+		this.#logger(`isRegistered: ${formatToken(token)}`);
 		return !!(
-			this._registry.has(token) ||
-			(recursive && this._parent && this._parent.isRegistered(token, true))
+			this.#registry.has(token) ||
+			(recursive && this.#parent && this.#parent.isRegistered(token, true))
 		);
 	}
 
 	getChildKernel(): Kernel {
-		this._logger('getChildKernel');
-		return new StandardKernel(this._options, this);
+		this.#logger('getChildKernel');
+		return new StandardKernel(this.#options, this);
 	}
 
 	async dispose(): Promise<void> {
-		this._logger('dispose');
-		if (this._parent) {
-			this._parent.dispose();
+		this.#logger('dispose');
+		if (this.#parent) {
+			this.#parent.dispose();
 		}
-		const singletons = Array.from(this._singletons.values());
+		const singletons = Array.from(this.#singletons.values());
 		await Promise.all(
 			singletons.map(async (p) => {
 				const instance = await p;
@@ -274,7 +273,7 @@ export class StandardKernel implements Kernel {
 				}
 			})
 		);
-		this._singletons.clear();
+		this.#singletons.clear();
 	}
 
 	private resolveRegistration<T>(
@@ -282,18 +281,18 @@ export class StandardKernel implements Kernel {
 		registration: Registration<T>,
 		context: ResolutionContext
 	): Promise<T> {
-		this._logger(`resolveRegistration: ${formatToken(token)}`);
+		this.#logger(`resolveRegistration: ${formatToken(token)}`);
 		const lifecycle: Lifecycle =
 			isClassRegistration(registration) || isFactoryRegistration(registration)
 				? registration.opts.lifecycle || Lifecycle.Transient
 				: Lifecycle.Transient;
 
 		if (lifecycle == Lifecycle.Singleton) {
-			if (this._singletons.has(token)) {
-				return this._singletons.get(token) as Promise<T>;
+			if (this.#singletons.has(token)) {
+				return this.#singletons.get(token) as Promise<T>;
 			}
 			const instance = this.construct(registration, context);
-			this._singletons.set(token, instance);
+			this.#singletons.set(token, instance);
 			return instance;
 		} else if (lifecycle == Lifecycle.Transient) {
 			return this.construct(registration, context);
@@ -310,7 +309,7 @@ export class StandardKernel implements Kernel {
 	}
 
 	private construct<T>(registration: Registration<T>, context: ResolutionContext): Promise<T> {
-		this._logger(`construct: ${registration.type}`);
+		this.#logger(`construct: ${registration.type}`);
 		switch (registration.type) {
 			case RegistrationType.Class:
 				return this.constructClass<T>(registration, context);
@@ -331,7 +330,7 @@ export class StandardKernel implements Kernel {
 		registration: ClassRegistration<T>,
 		context: ResolutionContext
 	) {
-		this._logger(`constructClass: ${registration.value.name}`);
+		this.#logger(`constructClass: ${registration.value.name}`);
 		for (let i = 0; i < registration.params.length; i++) {
 			const param = registration.params[i];
 			if (
