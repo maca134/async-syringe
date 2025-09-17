@@ -128,11 +128,11 @@ export class StandardKernel implements Kernel {
 		context: ResolutionContext = { scopedResolutions: new Map() }
 	): Promise<T> {
 		this._logger(`resolve: ${formatToken(token)}`);
-		if (!this._registry.has(token) && typeof token === 'function') {
-			this.registerClass(token);
-		}
 		if (!this._registry.has(token) && this._parent) {
 			return this._parent.resolve(token);
+		}
+		if (!this._registry.has(token) && typeof token === 'function') {
+			this.registerClass(token);
 		}
 		const registration = this._registry.get<T>(token);
 		if (!registration) {

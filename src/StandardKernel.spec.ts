@@ -469,3 +469,23 @@ test('optional inject', async () => {
 	expect(fooBar).toBeInstanceOf(FooBar);
 	expect(fooBar.foo).toBeUndefined();
 });
+
+test('singleton child kernel', async () => {
+	@singleton()
+	class Foo {}
+
+	@injectable()
+	class Bar {
+		constructor(public id: number, public foo: Foo) {}
+	}
+
+	const bar1 = await kernel.resolve(Bar, [{ index: 0, value: 1 }]);
+	const bar2 = await kernel.resolve(Bar, [{ index: 0, value: 2 }]);
+	expect(bar1).toBeInstanceOf(Bar);
+	expect(bar2).toBeInstanceOf(Bar);
+	expect(bar1.foo).toBeInstanceOf(Foo);
+	expect(bar2.foo).toBeInstanceOf(Foo);
+	expect(bar1.foo === bar2.foo).toBeTruthy();
+	expect(bar1.id).toStrictEqual(1);
+	expect(bar2.id).toStrictEqual(2);
+});
