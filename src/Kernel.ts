@@ -123,7 +123,7 @@ export type ConstructorArgumentsArray = {
 	value: any;
 }[];
 
-export type Node = { name: string; lifecycle: string; children: Node[] };
+export type Node = { name: string; children: Node[] };
 
 interface Disposable {
 	dispose(): void | Promise<void>;
