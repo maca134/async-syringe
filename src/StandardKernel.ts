@@ -30,13 +30,14 @@ export type StandardKernelOptions = {
 
 export class StandardKernel implements Kernel {
 	readonly #parent?: StandardKernel;
-	#singletons?: Map<InjectionToken<any>, Promise<any>>;
+	readonly #singletons: Map<InjectionToken<any>, Promise<any>>;
 	readonly #registry = new Registry();
 	readonly #options: StandardKernelOptions;
 	readonly #logger: (message: string) => void;
 
 	constructor(options?: Partial<StandardKernelOptions>, parent?: StandardKernel) {
 		this.#parent = parent;
+		this.#singletons = this.#parent ? this.#parent.#singletons : new Map();
 		this.#logger = (message: string) => {
 			if (!options?.log) {
 				return;
@@ -51,10 +52,6 @@ export class StandardKernel implements Kernel {
 			...options,
 		};
 		this.#logger('Kernel created');
-	}
-
-	get singletons(): Map<InjectionToken<any>, Promise<any>> {
-		return this.#parent ? this.#parent.singletons : (this.#singletons ??= new Map());
 	}
 
 	get metadata(): MetadataStore {
@@ -127,7 +124,7 @@ export class StandardKernel implements Kernel {
 	unregister<T>(token: InjectionToken<T>): void {
 		this.#logger(`unregister: ${formatToken(token)}`);
 		this.#registry.setAll(token, []);
-		this.singletons.delete(token);
+		this.#singletons.delete(token);
 	}
 
 	// TODO: support ConstructorArgumentsObject
@@ -260,7 +257,7 @@ export class StandardKernel implements Kernel {
 		if (this.#parent) {
 			this.#parent.dispose();
 		}
-		const singletons = Array.from(this.singletons.values());
+		const singletons = Array.from(this.#singletons.values());
 		await Promise.all(
 			singletons.map(async (p) => {
 				const instance = await p;
@@ -269,7 +266,7 @@ export class StandardKernel implements Kernel {
 				}
 			})
 		);
-		this.singletons.clear();
+		this.#singletons.clear();
 	}
 
 	#resolveRegistration<T>(
@@ -284,11 +281,11 @@ export class StandardKernel implements Kernel {
 				: Lifecycle.Transient;
 
 		if (lifecycle == Lifecycle.Singleton) {
-			if (this.singletons.has(token)) {
-				return this.singletons.get(token) as Promise<T>;
+			if (this.#singletons.has(token)) {
+				return this.#singletons.get(token) as Promise<T>;
 			}
 			const instance = this.#construct(registration, context);
-			this.singletons.set(token, instance);
+			this.#singletons.set(token, instance);
 			return instance;
 		} else if (lifecycle == Lifecycle.Transient) {
 			return this.#construct(registration, context);
