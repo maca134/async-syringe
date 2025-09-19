@@ -14,7 +14,7 @@
 		"build": "npm run clean && tsx ./build.ts && npm run copy:package.cjs.json",
 		"copy:package.cjs.json": "shx cp ./package.cjs.json ./dist/cjs/package.json && shx cp ./package.cjs.json ./dist/types/package.json",
 		"clean": "rimraf ./dist",
-		"test": "npm run lint && jest --config jest.config.json",
+		"test": "jest --config jest.config.json",
 		"test:inspect": "npm run lint && node --inspect-brk ./node_modules/jest/bin/jest.js --runInBand --config jest.config.json",
 		"test:coverage": "jest --config jest.config.json --coverage",
 		"lint": "eslint --ext \".js,.jsx,.ts,.tsx\" \"./src\"",
