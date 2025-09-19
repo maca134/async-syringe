@@ -29,13 +29,13 @@ export type StandardKernelOptions = {
 };
 
 export class StandardKernel implements Kernel {
-	readonly #parent?: Kernel;
-	readonly #singletons = new Map<InjectionToken<any>, Promise<any>>();
+	readonly #parent?: StandardKernel;
+	#singletons?: Map<InjectionToken<any>, Promise<any>>;
 	readonly #registry = new Registry();
 	readonly #options: StandardKernelOptions;
 	readonly #logger: (message: string) => void;
 
-	constructor(options?: Partial<StandardKernelOptions>, parent?: Kernel) {
+	constructor(options?: Partial<StandardKernelOptions>, parent?: StandardKernel) {
 		this.#parent = parent;
 		this.#logger = (message: string) => {
 			if (!options?.log) {
@@ -51,6 +51,10 @@ export class StandardKernel implements Kernel {
 			...options,
 		};
 		this.#logger('Kernel created');
+	}
+
+	get singletons(): Map<InjectionToken<any>, Promise<any>> {
+		return this.#parent ? this.#parent.singletons : (this.#singletons ??= new Map());
 	}
 
 	get metadata(): MetadataStore {
@@ -123,7 +127,7 @@ export class StandardKernel implements Kernel {
 	unregister<T>(token: InjectionToken<T>): void {
 		this.#logger(`unregister: ${formatToken(token)}`);
 		this.#registry.setAll(token, []);
-		this.#singletons.delete(token);
+		this.singletons.delete(token);
 	}
 
 	// TODO: support ConstructorArgumentsObject
@@ -133,11 +137,11 @@ export class StandardKernel implements Kernel {
 		context: ResolutionContext = { scopedResolutions: new Map() }
 	): Promise<T> {
 		this.#logger(`resolve: ${formatToken(token)}`);
-		if (!this.#registry.has(token) && this.#parent) {
-			return this.#parent.resolve(token);
-		}
 		if (!this.#registry.has(token) && typeof token === 'function') {
 			this.registerClass(token);
+		}
+		if (!this.#registry.has(token) && this.#parent) {
+			return this.#parent.resolve(token, inject, context);
 		}
 		const registration = this.#registry.get<T>(token);
 		if (!registration) {
@@ -203,7 +207,7 @@ export class StandardKernel implements Kernel {
 	}
 
 	// TODO: add properties to Node
-	dependencyTree<T>(token: InjectionToken<T>, options?: StandardKernelOptions): Node {
+	dependencyTree<T>(token: InjectionToken<T>, options?: StandardKernelOptions) {
 		this.#logger(`dependencyTree: ${formatToken(token)}`);
 		const kernel = new StandardKernel(options);
 		for (const [token, reg] of this.#registry.entries()) {
@@ -217,32 +221,24 @@ export class StandardKernel implements Kernel {
 			if (!registration) {
 				throw new TokenNotExist(`${formatToken(token)} token not found`);
 			}
-
-			const children = isClassRegistration(registration)
-				? (registration.params
-						.map((param) => {
-							try {
-								return resolve(param.token);
-							} catch (err) {
-								if (err instanceof TokenNotExist && param.optional) {
-									return undefined;
-								} else {
-									throw err;
-								}
-							}
-						})
-						.filter((i) => !!i) as Node[])
-				: [];
-			const lifecycle: Lifecycle =
-				isClassRegistration(registration) || isFactoryRegistration(registration)
-					? registration.opts.lifecycle || Lifecycle.Transient
-					: Lifecycle.Transient;
-			const node: Node = {
+			const children: Node[] = [];
+			if (isClassRegistration(registration)) {
+				for (const param of registration.params) {
+					try {
+						children.push(resolve(param.token));
+					} catch (err) {
+						if (err instanceof TokenNotExist && param.optional) {
+							// skip
+						} else {
+							throw err;
+						}
+					}
+				}
+			}
+			return {
 				name: typeof token === 'function' ? token.name : String(token),
-				lifecycle: Lifecycle[lifecycle],
 				children,
-			};
-			return node;
+			} as Node;
 		})(token);
 	}
 
@@ -264,7 +260,7 @@ export class StandardKernel implements Kernel {
 		if (this.#parent) {
 			this.#parent.dispose();
 		}
-		const singletons = Array.from(this.#singletons.values());
+		const singletons = Array.from(this.singletons.values());
 		await Promise.all(
 			singletons.map(async (p) => {
 				const instance = await p;
@@ -273,7 +269,7 @@ export class StandardKernel implements Kernel {
 				}
 			})
 		);
-		this.#singletons.clear();
+		this.singletons.clear();
 	}
 
 	#resolveRegistration<T>(
@@ -288,11 +284,11 @@ export class StandardKernel implements Kernel {
 				: Lifecycle.Transient;
 
 		if (lifecycle == Lifecycle.Singleton) {
-			if (this.#singletons.has(token)) {
-				return this.#singletons.get(token) as Promise<T>;
+			if (this.singletons.has(token)) {
+				return this.singletons.get(token) as Promise<T>;
 			}
 			const instance = this.#construct(registration, context);
-			this.#singletons.set(token, instance);
+			this.singletons.set(token, instance);
 			return instance;
 		} else if (lifecycle == Lifecycle.Transient) {
 			return this.#construct(registration, context);
