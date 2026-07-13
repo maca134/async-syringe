@@ -1,13 +1,13 @@
 import 'reflect-metadata';
+import { type Factory } from './Factory';
 import type { KernelModule, Kernel } from './Kernel';
 import { Lifecycle } from './Kernel';
 import { StandardKernel } from './StandardKernel';
+import { factory } from './decorators/autoFactory';
 import { inject } from './decorators/inject';
 import { injectAll } from './decorators/injectAll';
 import { injectable } from './decorators/injectable';
 import { singleton } from './decorators/singleton';
-import { factory } from './decorators/autoFactory';
-import { type Factory } from './Factory';
 
 let kernel: StandardKernel;
 beforeEach(() => {
