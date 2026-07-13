@@ -256,7 +256,9 @@ export class StandardKernel implements Kernel {
 	async dispose(): Promise<void> {
 		this.#logger('dispose');
 		if (this.#parent) {
-			this.#parent.dispose();
+			// singletons are shared with the parent chain, only the root tears them down
+			await this.#parent.dispose();
+			return;
 		}
 		const singletons = Array.from(this.#singletons.values());
 		await Promise.all(
