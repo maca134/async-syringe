@@ -135,7 +135,7 @@ export function isDisposable(obj: any): obj is Disposable {
 }
 
 export interface KernelModule {
-	load(kernal: Kernel): void;
+	load(kernel: Kernel): void;
 }
 
 export interface Kernel {
@@ -143,7 +143,7 @@ export interface Kernel {
 	 * Register a class with an injection token with options.
 	 *
 	 * @param token injection token
-	 * @param ctor contructor
+	 * @param ctor constructor
 	 * @param options injection options
 	 */
 	registerClass<T>(
@@ -156,14 +156,14 @@ export interface Kernel {
 	 * Register a class with an injection token.
 	 *
 	 * @param token injection token
-	 * @param ctor contructor
+	 * @param ctor constructor
 	 */
 	registerClass<T>(token: InjectionToken<T>, ctor: constructor<T>): void;
 
 	/**
 	 * Register a class directly with injection options.
 	 *
-	 * @param ctor contructor
+	 * @param ctor constructor
 	 * @param options injection options
 	 */
 	registerClass<T>(ctor: constructor<T>, options: RegistrationOptions<T>): void;
@@ -171,7 +171,7 @@ export interface Kernel {
 	/**
 	 * Register a class directly.
 	 *
-	 * @param ctor contructor
+	 * @param ctor constructor
 	 */
 	registerClass<T>(ctor: constructor<T>): void;
 
@@ -205,7 +205,7 @@ export interface Kernel {
 	registerToken<T>(token: InjectionToken<T>, to: InjectionToken<T>): void;
 
 	/**
-	 * Unregister an injection toke
+	 * Unregister an injection token
 	 *
 	 * @param token injection token
 	 */

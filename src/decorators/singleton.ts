@@ -4,7 +4,7 @@ import { injectable } from './injectable';
 
 /**
  * Class decorator factory that allows the class' dependencies to be injected
- * and indicate it is a singletion
+ * and indicate it is a singleton
  *
  * @param options registration options
  */
