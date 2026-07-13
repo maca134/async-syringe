@@ -10,7 +10,7 @@
 		"dist"
 	],
 	"scripts": {
-		"release": "np",
+		"release": "np --no-publish",
 		"build": "npm run clean && tsx ./build.ts && npm run copy:package.cjs.json",
 		"copy:package.cjs.json": "shx cp ./package.cjs.json ./dist/cjs/package.json && shx cp ./package.cjs.json ./dist/types/package.json",
 		"clean": "rimraf ./dist",
