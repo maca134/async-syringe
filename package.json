@@ -34,7 +34,7 @@
 		"url": "git+https://github.com/maca134/async-syringe.git"
 	},
 	"engines": {
-		"node": ">= 8.0.0"
+		"node": ">=18"
 	},
 	"keywords": [
 		"di",
