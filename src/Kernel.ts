@@ -32,6 +32,7 @@ export type RegistrationOptions<T> = {
 
 export type ResolutionContext = {
 	scopedResolutions: Map<InjectionToken<any>, Promise<any>>;
+	resolving: Set<InjectionToken<any>>;
 };
 export type constructor<T> = { new (...args: any[]): T };
 export type InjectionToken<T = any> = constructor<T> | string | symbol;

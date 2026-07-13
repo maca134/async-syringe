@@ -132,7 +132,7 @@ export class StandardKernel implements Kernel {
 	resolve<T>(
 		token: InjectionToken<T>,
 		inject: ConstructorArgumentsArray = [],
-		context: ResolutionContext = { scopedResolutions: new Map() }
+		context: ResolutionContext = { scopedResolutions: new Map(), resolving: new Set() }
 	): Promise<T> {
 		this.#logger(`resolve: ${formatToken(token)}`);
 		if (!this.#registry.has(token) && typeof token === 'function') {
@@ -186,7 +186,7 @@ export class StandardKernel implements Kernel {
 
 	resolveAll<T>(
 		token: InjectionToken<T>,
-		context: ResolutionContext = { scopedResolutions: new Map() }
+		context: ResolutionContext = { scopedResolutions: new Map(), resolving: new Set() }
 	): Promise<T[]> {
 		this.#logger(`resolveAll: ${formatToken(token)}`);
 		if (!this.#registry.has(token) && this.#parent) {
@@ -278,29 +278,37 @@ export class StandardKernel implements Kernel {
 		context: ResolutionContext
 	): Promise<T> {
 		this.#logger(`resolveRegistration: ${formatToken(token)}`);
-		const lifecycle: Lifecycle =
-			isClassRegistration(registration) || isFactoryRegistration(registration)
-				? registration.opts.lifecycle || Lifecycle.Transient
-				: Lifecycle.Transient;
+		if (context.resolving.has(token)) {
+			throw new Error(`circular dependency detected while resolving ${formatToken(token)}`);
+		}
+		context.resolving.add(token);
+		try {
+			const lifecycle: Lifecycle =
+				isClassRegistration(registration) || isFactoryRegistration(registration)
+					? registration.opts.lifecycle || Lifecycle.Transient
+					: Lifecycle.Transient;
 
-		if (lifecycle == Lifecycle.Singleton) {
-			if (this.#singletons.has(token)) {
-				return this.#singletons.get(token) as Promise<T>;
+			if (lifecycle == Lifecycle.Singleton) {
+				if (this.#singletons.has(token)) {
+					return this.#singletons.get(token) as Promise<T>;
+				}
+				const instance = this.#construct(registration, context);
+				this.#singletons.set(token, instance);
+				return instance;
+			} else if (lifecycle == Lifecycle.Transient) {
+				return this.#construct(registration, context);
+			} else if (lifecycle == Lifecycle.Scoped) {
+				if (context.scopedResolutions.has(token)) {
+					return context.scopedResolutions.get(token) as Promise<T>;
+				}
+				const instance = this.#construct(registration, context);
+				context.scopedResolutions.set(token, instance);
+				return instance;
+			} else {
+				throw new Error('unknown lifecycle');
 			}
-			const instance = this.#construct(registration, context);
-			this.#singletons.set(token, instance);
-			return instance;
-		} else if (lifecycle == Lifecycle.Transient) {
-			return this.#construct(registration, context);
-		} else if (lifecycle == Lifecycle.Scoped) {
-			if (context.scopedResolutions.has(token)) {
-				return context.scopedResolutions.get(token) as Promise<T>;
-			}
-			const instance = this.#construct(registration, context);
-			context.scopedResolutions.set(token, instance);
-			return instance;
-		} else {
-			throw new Error('unknown lifecycle');
+		} finally {
+			context.resolving.delete(token);
 		}
 	}
 
