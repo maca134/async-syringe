@@ -502,6 +502,46 @@ test('singleton child kernel', async () => {
 	expect(bar2.id).toStrictEqual(2);
 });
 
+test('custom injection params on a singleton do not pollute the shared singleton cache', async () => {
+	@singleton()
+	class Foo {
+		constructor(@inject('idToken', true) public id?: number) {}
+	}
+
+	const foo1 = await kernel.resolve(Foo, [{ index: 0, value: 1 }]);
+	const foo2 = await kernel.resolve(Foo, [{ index: 0, value: 2 }]);
+	const foo3 = await kernel.resolve(Foo);
+	const foo4 = await kernel.resolve(Foo);
+
+	expect(foo1.id).toStrictEqual(1);
+	expect(foo2.id).toStrictEqual(2);
+	expect(foo1).not.toBe(foo2);
+	// the real, un-parameterized singleton must still be a single shared instance
+	expect(foo3.id).toBeUndefined();
+	expect(foo3).toBe(foo4);
+});
+
+test('dispose runs on singletons and clears them', async () => {
+	const disposeFn = jest.fn();
+
+	@singleton()
+	class Foo {
+		dispose() {
+			disposeFn();
+		}
+	}
+
+	await kernel.resolve(Foo);
+	await kernel.dispose();
+
+	expect(disposeFn).toHaveBeenCalledTimes(1);
+});
+
+test('dispose throws when called on a child kernel', async () => {
+	const childKernel = kernel.getChildKernel();
+	await expect(childKernel.dispose()).rejects.toThrowError();
+});
+
 test('chained factories', async () => {
 	@injectable()
 	class Foo1 {

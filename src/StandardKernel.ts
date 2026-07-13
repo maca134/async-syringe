@@ -170,7 +170,9 @@ export class StandardKernel implements Kernel {
 				{
 					type: RegistrationType.Class,
 					value: registration.value,
-					opts: registration.opts,
+					// custom constructor args make this a one-off instance, so it must never be
+					// cached as the shared singleton/scoped instance for this token
+					opts: { ...registration.opts, lifecycle: Lifecycle.Transient },
 					params,
 					props: registration.props,
 				},
@@ -256,9 +258,11 @@ export class StandardKernel implements Kernel {
 	async dispose(): Promise<void> {
 		this.#logger('dispose');
 		if (this.#parent) {
-			// singletons are shared with the parent chain, only the root tears them down
-			await this.#parent.dispose();
-			return;
+			// singletons are shared with the whole kernel tree, so a child kernel disposing
+			// them would tear down instances that sibling/parent kernels still depend on
+			throw new Error(
+				'dispose() can only be called on the root kernel, as singletons are shared across the kernel tree'
+			);
 		}
 		const singletons = Array.from(this.#singletons.values());
 		await Promise.all(

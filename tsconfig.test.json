@@ -2,6 +2,7 @@
 	"compilerOptions": {
 		"strict": false,
 		"types": [
+			"reflect-metadata",
 			"jest"
 		],
 		"experimentalDecorators": true,

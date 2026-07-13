@@ -253,7 +253,11 @@ export interface Kernel {
 	isRegistered<T>(token: InjectionToken<T>, recursive?: boolean): boolean;
 
 	/**
-	 * Dispose of all singletons
+	 * Dispose of all singletons.
+	 *
+	 * Singletons are shared across the whole kernel tree, so this must be called on the
+	 * root kernel. Calling it on a child kernel throws, since disposing there would tear
+	 * down instances the parent/sibling kernels still depend on.
 	 */
 	dispose(): Promise<void>;
 }
