@@ -80,9 +80,10 @@ export class StandardKernel implements Kernel {
 		}
 
 		const { metadata } = store.get(ctor);
-		const opts = options || {
+		const opts = {
 			initialize: metadata.initialize,
 			lifecycle: metadata.lifecycle || Lifecycle.Transient,
+			...options,
 		};
 
 		// need to save value and not a scoped function
