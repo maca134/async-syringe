@@ -156,7 +156,7 @@ export class StandardKernel implements Kernel {
 				if (!injectParam) {
 					return param;
 				}
-				const token = Symbol.for(
+				const token = Symbol(
 					`${String(registration.params[i].token)}-${injectParam.index}`
 				);
 				kernel.registerValue(token, injectParam.value);
